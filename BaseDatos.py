@@ -11,7 +11,12 @@ def encontrarTransportista(NroTransportista):
     conexion = conectarBase()
     cursor = conexion.cursor()
 
-    querySQL = 'SELECT * FROM TRANSPORTISTA WHERE NroTransportista=?'
+    querySQL = ('SELECT NroTransportista, NombreTransportista, CodRadioUsual, DescripcionRadio, NombreEmpresa '
+        'FROM TRANSPORTISTA '
+        'JOIN RADIO ON RADIO.CodRadio = TRANSPORTISTA.CodRadioUsual '
+        'JOIN EMPRESA ON EMPRESA.CodEmpresa = TRANSPORTISTA.CodEmpresa '
+        'WHERE TRANSPORTISTA.NroTransportista=?')
+
     filaTransportista = cursor.execute(querySQL,(NroTransportista,))
     transportista = filaTransportista.fetchone()
 
@@ -29,16 +34,18 @@ def generarRecepcion(recepcion):
         cursor = conexion.cursor()
 
         #Obtengo datos de la recepcion
-        nroTransportista = recepcion.transportista[0]
+        nroTransportista = recepcion.transportista[1]
+        codRadio = recepcion.transportista[0]
         listaChicos = recepcion.listaFarmaboxChico
         listaGrandes = recepcion.listaFarmaboxGrande
+        listaRechazados = recepcion.listaRechazados
         tapas = recepcion.tapas
 
         #Armo y ejecuto la Query
         now = datetime.now()
         fechaHora = now.strftime("%Y/%m/%d %H:%M:%S")
-        querySQL = 'INSERT INTO RECEPCION (NroTransportista, FechaRecepcion, Tapas) VALUES (?,?,?)'
-        cursor.execute(querySQL,(nroTransportista,fechaHora,tapas))
+        querySQL = 'INSERT INTO RECEPCION (CodRadio, NroTransportista, FechaRecepcion, Tapas) VALUES (?,?,?,?)'
+        cursor.execute(querySQL,(codRadio,nroTransportista,fechaHora,tapas))
         
 
         #Obtengo ID
@@ -51,8 +58,8 @@ def generarRecepcion(recepcion):
 
         #Copio los valores de la nueva recepción en la clase
         recepcion.setNroRecepcion(idGenerado)
-        recepcion.setFecha(ultimaFila[3])
-        recepcion.agregarTapas(ultimaFila[4])
+        recepcion.setFecha(ultimaFila[4])
+        recepcion.agregarTapas(ultimaFila[5])
                 
 
         for cubeta in listaChicos:
@@ -62,6 +69,10 @@ def generarRecepcion(recepcion):
         for cubeta in listaGrandes:
             querySQL = 'INSERT INTO FB_X_RECEPCION (NroFarmabox, NroRecepcion) VALUES (?,?)'
             cursor.execute(querySQL,(cubeta,idGenerado))
+
+        for registro in listaRechazados:
+            querySQL = 'INSERT INTO RECHAZOS_X_RECEPCION (NroRecepcion,Lectura1,Lectura2,CodMotivoRechazo) VALUES (?,?,?,?)'
+            cursor.execute(querySQL,(idGenerado,registro[0],registro[1],registro[2]))
 
         conexion.commit()
         cursor.close()
@@ -77,4 +88,30 @@ def generarRecepcion(recepcion):
             conexion.close()
             print("The SQLite connection is closed")
 
+def obtenerRadios():
+    conexion = conectarBase()
+    cursor = conexion.cursor()
 
+    querySQL = ('SELECT * FROM RADIO')
+
+    resultado = cursor.execute(querySQL)
+    radios = list(cursor.fetchall())
+    cursor.close
+    return radios
+
+def encontrarFarmabox(NroFarmabox):
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+
+    querySQL = ('SELECT * FROM FARMABOX '
+        'WHERE NroFarmabox=?')
+
+    filaFB = cursor.execute(querySQL,(NroFarmabox,))
+    farmabox = filaFB.fetchone()
+
+    if farmabox is None:
+        cursor.close
+        return None
+
+    cursor.close
+    return farmabox

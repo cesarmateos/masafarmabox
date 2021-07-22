@@ -4,6 +4,7 @@ from tkinter.ttk import Combobox
 from winsound import Beep
 import BaseDatos
 import Recursos
+import Recepcion
 import os
 import sys
 
@@ -21,45 +22,53 @@ class Ventana(Tk):
         screen_width = Tk.winfo_screenwidth(self)
         screen_height = Tk.winfo_screenheight(self)
 
-        #Calculo margen del ancho
-        margen = str(int((screen_width - Recursos.ANCHO_VENTANA)/ 2))
+        # Tamaño Ventana
+        self.anchoVentana = 900
+        self.altoFrameSuperior = 65
+        self.altoFrameMedio = 530
+        self.altoFrameInferior = 70
+        self.altoFrameTitulos = 50
+
+        #Calculo margen del ancho al posicionar la ventana
+        margenPosicional = str(int((screen_width - self.anchoVentana)/ 2))
 
          # Título e Ícono
         self.title(Recursos.TITULO)
         rutaIcono = Recursos.rutaArchivo('Imagenes/Pantuflas.ico')
         self.iconbitmap(rutaIcono)
 
-        # Tamaño Ventana
-        alto = Recursos.ALTO_FRAME_SUPERIOR + Recursos.ALTO_FRAME_MEDIO + Recursos.ALTO_FRAME_INFERIOR
-        self.geometry(str(Recursos.ANCHO_VENTANA)+"x"+str(alto)+"+"+margen+"+10")
+        altoVentana = self.altoFrameInferior + self.altoFrameMedio + self.altoFrameSuperior
+        self.geometry(str(self.anchoVentana)+"x"+str(altoVentana)+"+"+margenPosicional+"+10")
         self.resizable(False, False)
 
         #---Frame Superior----
-        self.frameSuperior = Frame(self,bg=Recursos.COLOR_FONDO,height=Recursos.ALTO_FRAME_SUPERIOR)
+        self.frameSuperior = Frame(self,bg=Recursos.COLOR_FONDO,height=self.altoFrameInferior)
         self.frameSuperior.pack(side = TOP, fill = BOTH, expand = TRUE)
         self.frameSuperior.propagate(False)
 
         #Linea Superior
-        Recursos.linea(self.frameSuperior,Recursos.ANCHO_VENTANA,0,2)
+        Recursos.linea(self.frameSuperior,self.anchoVentana,0,2)
           
         #Encabezado Top Izquierdo
-        self.encabezado = StringVar()     
-        Label(self.frameSuperior, textvariable=self.encabezado,font=(Recursos.FUENTE_PRINCIPAL, 20),background=Recursos.COLOR_FONDO).grid(row=0,column=0,sticky=W,pady=(10,0),padx=Recursos.MARGEN_X)
+        self.encabezado = StringVar()   
+        self.subtitulo = StringVar()   
+        Label(self.frameSuperior, textvariable=self.encabezado,font=(Recursos.FUENTE_PRINCIPAL, 16),background=Recursos.COLOR_FONDO).grid(row=0,column=0,sticky=W,pady=(5,0),padx=Recursos.MARGEN_X)
+        Label(self.frameSuperior, textvariable=self.subtitulo,font=(Recursos.FUENTE_PRINCIPAL, 9),background=Recursos.COLOR_FONDO).grid(row=1,column=0,sticky=W,padx=Recursos.MARGEN_X)
 
         #Logo
         imagenLogo = PhotoImage(file=Recursos.rutaArchivo('Imagenes/Logo.png'))
         logo = Label(self.frameSuperior, image=imagenLogo,bg=Recursos.COLOR_FONDO)
         logo.photo = imagenLogo
-        logo.grid(row=0,column=1,columnspan=2,sticky=NE,pady=10,padx=Recursos.MARGEN_X)
+        logo.grid(row=0,column=1,rowspan=2,sticky=N+S+E,pady=10,padx=Recursos.MARGEN_X)
 
 
         #---Frame contenedor de Widgets---
-        self.contenedor = Frame(self,bg=Recursos.COLOR_FONDO,height=Recursos.ALTO_FRAME_MEDIO) 
+        self.contenedor = Frame(self,bg=Recursos.COLOR_FONDO,height=self.altoFrameMedio) 
         self.contenedor.pack(side = TOP, fill = X, expand = True)
         self.contenedor.propagate(False)
 
         #---Frame inferior---
-        self.frameInferior = Frame(self,bg=Recursos.COLOR_FONDO,height=Recursos.ALTO_FRAME_INFERIOR) 
+        self.frameInferior = Frame(self,bg=Recursos.COLOR_FONDO,height=self.altoFrameInferior) 
         self.frameInferior.pack(side = BOTTOM, fill = BOTH, expand = TRUE,padx=Recursos.MARGEN_X,pady=10)
         self.frameInferior.propagate(False)
 
@@ -70,27 +79,25 @@ class Ventana(Tk):
         self.dato2 = 0
 
     def pantallaInicial(self):
+
         #Limpio pantalla de widgets anteriores
         self.limpiarFrame()
-        self.encabezado.set("")
-
-        #contenedorGeneral = self.contenedor
 
         self.pantalla = 1
 
 
         #-------------FRAME CONTENEDOR PRINCIPAL------------
         #Texto
-        Label(self.contenedor, text="Escanear código QR o ingresar manualmente",font=(Recursos.FUENTE_PRINCIPAL, 15),bg='white').place(x=185,y=200)
+        Label(self.contenedor, text="Escanear código QR o ingresar manualmente",font=(Recursos.FUENTE_PRINCIPAL, 15),bg=Recursos.COLOR_FONDO).place(x=210,y=200)
         
         #Entrada de QR
         entradaQR = Entry(self.contenedor, font=(Recursos.FUENTE_PRINCIPAL,20), width=20,highlightthickness=2)
         entradaQR.focus_set()
-        entradaQR.place(x=210,y=250)  
+        entradaQR.place(x=235,y=250)  
 
         #Boton Lupa
         botonLupa = Recursos.Btn(self.contenedor, imagenNormal='Lupa.png', imagenHover='LupaHover.png', command=lambda : self.validarTransportista(entradaQR))
-        botonLupa.place(x=575,y=245) 
+        botonLupa.place(x=600,y=245) 
 
         #Activo el enter
         self.bind('<Return>', lambda event : self.enterPricipal(self,entradaQR))
@@ -99,6 +106,7 @@ class Ventana(Tk):
         #-------------FRAME INFERIOR------------
         #Boton Recepciones            
         botonRecepciones = Recursos.botonPrincipal(self.frameInferior,'Recepciones',self.pantallaRecepciones)
+        #botonRecepciones = Recursos.botonPrincipal(self.frameInferior,'Recepciones',lambda : PantallaRecepciones(self))
         botonRecepciones.pack(side=RIGHT, anchor=SE)
 
         #Boton Configuración       
@@ -118,19 +126,20 @@ class Ventana(Tk):
         self.recepcion = recepcion
 
         #Genero Encabezado
-        self.encabezado.set(recepcion.transportista[1])
+        self.encabezado.set(recepcion.transportista[1]+ " - "+ recepcion.transportista[4])
+        self.subtitulo.set("Radio : " +recepcion.transportista[2]+"  ("+recepcion.transportista[3]+")")
 
         #Creo los 3 frames
-        frameTitulos = Frame(contenedorGeneral,height=Recursos.ALTO_FRAME_TITULOS,background=Recursos.COLOR_FONDO)
+        frameTitulos = Frame(contenedorGeneral,height=self.altoFrameTitulos,background=Recursos.COLOR_FONDO)
         frameTitulos.pack(side=TOP,padx=Recursos.MARGEN_X)
-        altoFrameNroFarmabox = Recursos.ALTO_FRAME_MEDIO - (Recursos.ALTO_FRAME_TITULOS*2)
+        altoFrameNroFarmabox = self.altoFrameMedio - (self.altoFrameTitulos*2)
         frameMedio = Frame(contenedorGeneral,height=altoFrameNroFarmabox,background=Recursos.COLOR_FONDO)
         frameMedio.pack(fill=BOTH,expand=True,padx=Recursos.MARGEN_X,side=TOP)
-        frameTotales = Frame(contenedorGeneral,height=Recursos.ALTO_FRAME_TITULOS,background=Recursos.COLOR_FONDO)
+        frameTotales = Frame(contenedorGeneral,height=self.altoFrameTitulos,background=Recursos.COLOR_FONDO)
         frameTotales.pack(fill=Y,expand=False,padx=Recursos.MARGEN_X,side=BOTTOM)
 
         
-        anchoLinea = Recursos.ANCHO_VENTANA-Recursos.MARGEN_X*2
+        anchoLinea = self.anchoVentana-Recursos.MARGEN_X*2
 
         #-------------FRAME TITULOS------------ 
         #Linea1
@@ -146,7 +155,7 @@ class Ventana(Tk):
  
 
         #-------------FRAME MEDIO------------
-        anchoFrameCubetas = (Recursos.ANCHO_VENTANA-Recursos.MARGEN_X*2)/2
+        anchoFrameCubetas = (self.anchoVentana-Recursos.MARGEN_X*2)/2
         frameChicos = Frame(frameMedio,background=Recursos.COLOR_NARANJA_MUY_SUAVE,height=altoFrameNroFarmabox,width=anchoFrameCubetas)
         frameChicos.pack(fill='both',expand=True,side=LEFT)
         frameChicos.propagate(False)
@@ -240,6 +249,10 @@ class Ventana(Tk):
         #Limpio pantalla de widgets anteriores
         self.limpiarFrame()
         
+        #-------------FRAME SUPERIOR------------
+        #Titulo
+        self.encabezado.set("Buscar Recepciones")
+
 
         #-------------FRAME INFERIORR------------
         #Boton Finalizar
@@ -261,12 +274,12 @@ class Ventana(Tk):
 
 
         #-------------FRAME MEDIO------------
-        anchoFrame = Recursos.ANCHO_VENTANA-Recursos.MARGEN_X*2
+        anchoFrame = self.anchoVentana-Recursos.MARGEN_X*2
 
         
 
         #Armo un Frame con márgenes
-        frameMedio = Frame(self.contenedor,height=Recursos.ALTO_FRAME_MEDIO,width=anchoFrame,background=Recursos.COLOR_FONDO)
+        frameMedio = Frame(self.contenedor,height=self.altoFrameMedio,width=anchoFrame,background=Recursos.COLOR_FONDO)
         frameMedio.pack(fill=BOTH,expand=True,padx=Recursos.MARGEN_X,side=TOP)
 
         cantidadColumnas = 9
@@ -355,6 +368,33 @@ class Ventana(Tk):
         Label(frameMedio, text=" Base de Datos",font=(Recursos.FUENTE_PRINCIPAL, 12),bg=Recursos.COLOR_MORADO_SUAVE,fg=Recursos.COLOR_MORADO,anchor=W).grid(row=13,column=0,columnspan=cantidadColumnas,sticky=EW)
         Recursos.linea(frameMedio,anchoFrame,14,cantidadColumnas)
 
+        #Titulo Impresora
+        linea5 = Recursos.linea(frameMedio,anchoFrame,17,cantidadColumnas) 
+        linea5.grid(pady=(padySeparador,0))
+        Label(frameMedio, text=" Impresora",font=(Recursos.FUENTE_PRINCIPAL, 12),bg=Recursos.COLOR_MORADO_SUAVE,fg=Recursos.COLOR_MORADO,anchor=W).grid(row=18,column=0,columnspan=cantidadColumnas,sticky=EW)
+        Recursos.linea(frameMedio,anchoFrame,19,cantidadColumnas)
+
+        #Backfeed
+        valoresFeed = []
+        for i in range (1,50):
+            valoresFeed.append(str(i*10))
+
+        Label(frameMedio, text="Retroseso Etiqueta Anterior: ",font="Verdana 10 bold",bg=Recursos.COLOR_FONDO,anchor=W).grid(padx=(20,0),row=20,column=0,columnspan=2,sticky=E)
+        textoBackFeed = StringVar()
+        textoBackFeed.set(Recursos.delayScanner)
+        backFeed = Label(frameMedio, textvariable=textoBackFeed,font=(Recursos.FUENTE_PRINCIPAL, 10),bg=Recursos.COLOR_FONDO,anchor=W)
+        backFeed.grid(row=20,column=2,sticky=W,padx=5)
+        botonCambiarBackFeed = Recursos.botonMicro(frameMedio,"Cambiar",lambda: self.cambiarValorConfiguracion(frameMedio,textoBackFeed,botonCambiarBackFeed,20,2,valoresFeed,'Impresora', 'backfeed'))
+        botonCambiarBackFeed.grid(row=20,column=3,sticky=W)
+        
+        Label(frameMedio, text="Alimento Etiqueta Posterior: ",font="Verdana 10 bold",bg=Recursos.COLOR_FONDO,anchor=W).grid(padx=(20,0),row=20,column=4,columnspan=2,sticky=E)
+        textoFeed = StringVar()
+        textoFeed.set(Recursos.delayScanner)
+        feed = Label(frameMedio, textvariable=textoFeed,font=(Recursos.FUENTE_PRINCIPAL, 10),bg=Recursos.COLOR_FONDO,anchor=W)
+        feed.grid(row=20,column=6,sticky=W,padx=5)
+        botonCambiarFeed = Recursos.botonMicro(frameMedio,"Cambiar",lambda: self.cambiarValorConfiguracion(frameMedio,textoFeed,botonCambiarFeed,20,6,valoresFeed,'Impresora', 'feed'))
+        botonCambiarFeed.grid(row=20,column=7,sticky=W)
+
 
 
 
@@ -384,6 +424,9 @@ class Ventana(Tk):
         Recursos.modificarConfig(grupo,item,dato)
    
     def limpiarFrame(self):
+        self.encabezado.set("")
+        self.subtitulo.set("")
+
         for widgets in self.contenedor.winfo_children():
             widgets.destroy()
         for widgets in self.frameInferior.winfo_children():
@@ -392,34 +435,48 @@ class Ventana(Tk):
     def validarTransportista(self,entradaQR):
         nroTransportista = entradaQR.get()
         entradaQR.delete(0, 'end')
-        transportista = BaseDatos.encontrarTransportista(nroTransportista)
-        if (transportista == None):
+        tuplaResultadoQuery = BaseDatos.encontrarTransportista(nroTransportista)
+        if (tuplaResultadoQuery == None):
             messagebox.showinfo(message="El transportista "+nroTransportista+" no existe", title="Transportista no encontrado")
         else:
-            self.pantallaCargaRecepcion(Recursos.Recepcion(transportista))
-    
-        """     
-        def nuevaLecturaFB(self,nroFB):
-        nroCubeta = int(nroFB)
-        if Recursos.esCubetaChica(nroCubeta):
-            contadorChicos = self.recepcion.cantidadChicos()
-            tanda = (contadorChicos // (Recursos.FILAS_MAX * Recursos.COLUMNA_MAX))
-            columna = ((contadorChicos % (Recursos.FILAS_MAX * Recursos.COLUMNA_MAX )) // Recursos.FILAS_MAX)*2
-            fila = (contadorChicos % Recursos.FILAS_MAX) + tanda * Recursos.FILAS_MAX
-            self.recepcion.agregarFarmaboxChico(nroCubeta)
-            Label(self.frameScrollChicos,text=str(contadorChicos+1),font="Verdana 10 bold",bg=Recursos.COLOR_NARANJA_MUY_SUAVE).grid(row=fila,column=columna,sticky=W,padx=(10,3))
-            Label(self.frameScrollChicos, text=str(nroCubeta),font=(Recursos.FUENTE_PRINCIPAL, 10),bg=Recursos.COLOR_NARANJA_MUY_SUAVE).grid(row=fila,column=columna+1,sticky=W,padx=(2,10))
-            self.marcadorCH.set(str(contadorChicos+1))
-        else:
-            contadorGrandes = self.recepcion.cantidadGrandes()
-            tanda = contadorGrandes // (Recursos.FILAS_MAX * Recursos.COLUMNA_MAX)
-            columna = ((contadorGrandes % (Recursos.FILAS_MAX * Recursos.COLUMNA_MAX )) // Recursos.FILAS_MAX)*2
-            fila = (contadorGrandes % Recursos.FILAS_MAX) + tanda * Recursos.FILAS_MAX
-            self.recepcion.agregarFarmaboxGrande(nroCubeta)
-            Label(self.frameScrollGrandes,text=str(contadorGrandes+1),font="Verdana 10 bold",bg=Recursos.COLOR_MORADO_MUY_SUAVE).grid(row=fila,column=columna,sticky=W,padx=(10,3))
-            Label(self.frameScrollGrandes, text=str(nroCubeta),font=(Recursos.FUENTE_PRINCIPAL, 10),bg=Recursos.COLOR_MORADO_MUY_SUAVE).grid(row=fila,column=columna+1,sticky=W,padx=(2,10))
-            self.marcadorGR.set(str(contadorGrandes+1)) 
-        """
+            transportista = list(tuplaResultadoQuery)
+            self.limpiarFrame()
+            #--Frame Inferior--
+            botonFinalizar = Recursos.botonPrincipal(self.frameInferior,'Iniciar Recepción',lambda: self.pantallaCargaRecepcion(Recepcion.Recepcion(transportista)))        
+            botonFinalizar.pack(anchor=SE)
+
+            #--Frame Medio--
+            Label(self.contenedor, text=transportista[1]+" - "+transportista[4],font=(Recursos.FUENTE_PRINCIPAL, 20),bg=Recursos.COLOR_FONDO).pack(anchor=CENTER,side=TOP,pady=(180,20))
+            frameRadio = Frame(self.contenedor,background=Recursos.COLOR_FONDO)
+            frameRadio.pack(anchor=CENTER,side=TOP)
+            Label(frameRadio, text="Radio",font=(Recursos.FUENTE_PRINCIPAL, 13),bg=Recursos.COLOR_FONDO).grid(column=0,row=0,padx=3)
+            textoCodRadio = StringVar()
+            textoCodRadio.set(transportista[2]+": "+transportista[3])
+            radioElegido = Label(frameRadio, textvariable=textoCodRadio,font=(Recursos.FUENTE_PRINCIPAL, 13),bg=Recursos.COLOR_FONDO)
+            radioElegido.grid(column=1,row=0)
+            botonCambiar = Recursos.botonMicro(frameRadio,"Cambiar",lambda: self.cambiarValorRadio(frameRadio,radioElegido,textoCodRadio,botonCambiar,transportista))
+            botonCambiar.grid(row=0,column=2,sticky=W,padx=10)
+
+    def cambiarValorRadio(self,contenedor, radioElegido,textoVariable,botonCambiar,transportista):
+        radios = BaseDatos.obtenerRadios()
+        valores = [valores[0]+" - "+valores[1] for valores in radios]
+        radioElegido.grid_remove()
+        lista = Combobox(contenedor,values=valores,state='readonly',width=40)
+        lista.current(0)
+        lista.grid(row=0,column=1,sticky=W)
+        botonCambiar.grid_remove()
+        botonGuardar = Recursos.botonMicro(contenedor,"Guardar",lambda: self.guardarCambiosRadio(botonGuardar,botonCambiar,radioElegido,textoVariable,lista,radios,transportista))
+        botonGuardar.grid(row=0,column=2,sticky=W,padx=10)    
+        
+    def guardarCambiosRadio(self,botonGuardar,botonCambiar,radioElegido,textoVariable,lista,radios,transportista):
+        radioElegido.grid()
+        botonCambiar.grid()
+        botonGuardar.destroy()
+        dato = str(lista.get())
+        transportista[2] = radios[lista.current()][0]
+        transportista[3] = radios[lista.current()][1]
+        lista.destroy()
+        textoVariable.set(dato)
 
     def nuevoFarmaboxChico(self,nroFB,cantidad):
         cantidadModificada = cantidad -1
@@ -449,10 +506,7 @@ class Ventana(Tk):
         if self.pantalla == 1:
             self.validarTransportista(dato1)
         elif self.pantalla == 2:
-            if dato1 == dato2:
-                self.recepcion.agregarFarmabox(self,dato1)
-            else:
-                self.recepcion.farmaboxRechazado(self,dato1,dato2)
+            self.recepcion.agregarFarmabox(self,dato1,dato2)
 
     def lanzarVentanaTapas(self):
         ancho = 460
@@ -509,10 +563,10 @@ class VentanaFarmabox(Recursos.VentanaHija):
         self.listaFarmabox = []
 
         #Creo Frames
-        altoFrameSuperior = alto - Recursos.ALTO_FRAME_INFERIOR - self.altoLinea
+        altoFrameSuperior = alto - ventanaMadre.altoFrameInferior - self.altoLinea
         frameSuperior = Frame(self.contenedor ,height=altoFrameSuperior,width=ancho, background=Recursos.COLOR_FONDO)
         frameSuperior.pack(fill=BOTH, expand=True)
-        self.frameInferior = Frame(self.contenedor ,height=Recursos.ALTO_FRAME_INFERIOR,width=ancho,background=Recursos.COLOR_FONDO)
+        self.frameInferior = Frame(self.contenedor ,height=ventanaMadre.altoFrameInferior,width=ancho,background=Recursos.COLOR_FONDO)
         self.frameInferior.pack(fill=BOTH)
 
         #---Frame Superior---
@@ -576,7 +630,7 @@ class VentanaFarmabox(Recursos.VentanaHija):
 
     def finalizarCarga(self):
         for cubeta in self.listaFarmabox:
-            self.ventanaMadre.recepcion.agregarFarmabox(self.ventanaMadre,cubeta)
+            self.ventanaMadre.recepcion.agregarFarmabox(self.ventanaMadre,cubeta,cubeta)
         self.ventana.destroy()
 
 class VentanaCancelaRecepcion(Recursos.VentanaHija):
@@ -626,4 +680,21 @@ class VentanaFinalizarRecepcion(Recursos.VentanaHija):
         Recursos.imprimirTicket(self.ventanaMadre.recepcion)
         self.ventanaMadre.pantallaInicial()
         self.ventana.destroy()
+
+class PantallaRecepciones():
+    def __init__(self,ventana):
+        ventana.pantalla = 3
+
+        #Limpio pantalla de widgets anteriores
+        ventana.limpiarFrame()
+        
+        #-------------FRAME SUPERIOR------------
+        #Titulo
+        ventana.encabezado.set("Buscar Recepciones")
+
+
+        #-------------FRAME INFERIORR------------
+        #Boton Finalizar
+        botonFinalizar = Recursos.botonPrincipal(ventana.frameInferior,'Finalizar',ventana.pantallaInicial)         
+        botonFinalizar.pack(anchor=SE)
     

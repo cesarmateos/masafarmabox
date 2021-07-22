@@ -1,10 +1,11 @@
 import Recursos
 import Ventanas
+import Scanners
 
 Recursos.leerConfig()
 
 ventana = Ventanas.Ventana()
 
-Recursos.ManagerScanner(ventana)
+Scanners.ManagerScanner(ventana)
 
 ventana.mainloop()

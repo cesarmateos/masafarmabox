@@ -1,24 +1,14 @@
 import os.path
 from tkinter import *
 from tkinter import font as tkFont
+from tkinter.tix import INTEGER
 from PIL import Image, ImageTk
-import serial
-from threading import Thread
-from threading import Semaphore
-from time import sleep
 import ctypes
 import math
 from configparser import ConfigParser
 
 
-#CONSTANTES
-TITULO = 'MASAfarmabox 1.0'
-ANCHO_VENTANA = 900
-ALTO_FRAME_SUPERIOR = 60
-ALTO_FRAME_TITULOS = 50
-ALTO_FRAME_INFERIOR = 70
-ALTO_FRAME_MEDIO = 530
-ALTO_RAYA = 3
+#Colores
 COLOR_MORADO = '#76608A'
 COLOR_MORADO_SUAVE = '#C5ADF2'
 COLOR_MORADO_MUY_SUAVE = '#FCF2FF'
@@ -27,6 +17,11 @@ COLOR_NARANJA = '#FF9933'
 COLOR_NARANJA_SUAVE ='#FCD2A2'
 COLOR_NARANJA_MUY_SUAVE ='#FCEFEA'
 COLOR_FONDO = 'white'
+
+
+#Otras Constantes
+TITULO = 'MASAfarmabox 1.0'
+ALTO_RAYA = 3
 MARGEN_X = 20
 FUENTE_PRINCIPAL = "Verdana"
 FILAS_MAX = 20
@@ -39,7 +34,9 @@ puertoScanner2 = ''
 baudScanner1 = ''
 baudScanner2 = ''
 nombreBase = ''
-delayScanner = 0
+delayScanner = 0.1
+feed = 350
+backfeed = 200
 
 #FUNCIONES
 def leerConfig():
@@ -53,12 +50,16 @@ def leerConfig():
     global baudScanner2
     global nombreBase
     global delayScanner
+    global feed
+    global backfeed
     puertoScanner1 = configParser.get('Scanner1', 'PUERTO')
     puertoScanner2= configParser.get('Scanner2', 'PUERTO')
     baudScanner1 = configParser.get('Scanner1', 'BAUD')
     baudScanner2 = configParser.get('Scanner2', 'BAUD')
     nombreBase = configParser.get('Base', 'ARCHIVO')
     delayScanner = float(configParser.get('Sincronizacion', 'TOLERANCIA'))
+    feed = configParser.get('Impresora','feed')
+    backfeed = configParser.get('Impresora','feed')
 
 def modificarConfig(grupo,item,dato):
     configParser = ConfigParser()  
@@ -113,7 +114,7 @@ def imprimirTicket(recepcion):
     xGrandes1 = 420
     xGrandes2 = 550
     xGrandes3 = 680
-    yFarmabox = 190
+    yFarmabox = 180
     interlineado = 30
     sizeFuenteFB = 28
 
@@ -121,11 +122,14 @@ def imprimirTicket(recepcion):
     tsclibrary.sendcommandW("DIRECTION 1")
     tsclibrary.sendcommandW("GAP 0,0")
     tsclibrary.sendcommandW("CLS")
-    tsclibrary.windowsfontW("600","10","34","0", "0", "0", "Arial","Recepción : "+str(recepcion.nroRecepcion))
-    tsclibrary.windowsfontW("10","10","34","0", "0", "0", "Arial",recepcion.fecha)
-    tsclibrary.windowsfontW("10","60","34","0", "0", "0", "Arial",recepcion.transportista[1])
-    tsclibrary.windowsfontW("135","130","50","0", "0", "1", "Arial","Chicos")
-    tsclibrary.windowsfontW("540","130","50","0", "0", "1", "Arial","Grandes")
+    tsclibrary.sendcommandW("BACKFEED "+backfeed)
+    tsclibrary.windowsfontW("10","10","34","0", "0", "0", "Arial",recepcion.transportista[1]+ " - "+ recepcion.transportista[4])
+    tsclibrary.windowsfontW("590","10","34","0", "0", "0", "Arial","Recep: "+str(recepcion.nroRecepcion).zfill(8))
+    tsclibrary.windowsfontW("10","50","34","0", "0", "0", "Arial",recepcion.transportista[2])
+    tsclibrary.windowsfontW("50","55","26","0", "0", "0", "Arial","("+ recepcion.transportista[3]+")")
+    tsclibrary.windowsfontW("545","50","34","0", "0", "0", "Arial",recepcion.fecha)
+    tsclibrary.windowsfontW("135","120","50","0", "0", "1", "Arial","Chicos")
+    tsclibrary.windowsfontW("540","120","50","0", "0", "1", "Arial","Grandes")
 
     columnaMasLarga = math.ceil(max(recepcion.cantidadChicos(),recepcion.cantidadGrandes())/3)
 
@@ -153,62 +157,12 @@ def imprimirTicket(recepcion):
     tsclibrary.windowsfontW(str(xChicos1),str(yFarmabox + interlineado*(columnaMasLarga+3)),str(sizeFuenteFB),"0", "0", "0", "Arial","Tapas : "+str(recepcion.tapas))
 
     tsclibrary.printlabelW("1","1")
-    tsclibrary.sendcommandW("FEED 400")
+    tsclibrary.sendcommandW("FEED "+feed)
     tsclibrary.closeport()
 
 
 #CLASES
-class Recepcion:
-    def __init__(self,transportista) -> None:
-        self.transportista = transportista
-        self.listaFarmaboxChico = []
-        self.listaFarmaboxGrande = []
-        self.tapas = 0
-        self.rechazados = 0
-    
-    def agregarFarmabox(self, ventana, nroFB):
-        nroCubeta = int(nroFB)
-        if esCubetaChica(nroCubeta):
-            if nroCubeta in self.listaFarmaboxChico:
-                self.farmaboxRechazado(ventana,nroCubeta,nroCubeta)
-            else:
-                self.listaFarmaboxChico.append(nroCubeta)
-                ventana.nuevoFarmaboxChico(nroFB,self.cantidadChicos())
-        else:
-            if nroCubeta in self.listaFarmaboxGrande:
-                self.farmaboxRechazado(ventana,nroCubeta,nroCubeta)
-            else:
-                self.listaFarmaboxGrande.append(nroCubeta)
-                ventana.nuevoFarmaboxGrande(nroFB,self.cantidadGrandes())
 
-
-    def agregarTapas(self,tapas):
-        self.tapas = tapas
-
-    def farmaboxRechazado(self,ventana,nroFBA, nroFBB):
-        self.rechazados += 1
-        ventana.nuevoRechazado()
-
-    def cantidadChicos(self):
-        return len(self.listaFarmaboxChico)
-    
-    def cantidadGrandes(self):
-        return len(self.listaFarmaboxGrande)
-    
-    def setNroRecepcion(self, nroRecepcion):
-        self.nroRecepcion = nroRecepcion
-    
-    def setFecha(self,fecha):
-        self.fecha = fecha
-
-    def chicosOrdenados(self):
-        self.listaFarmaboxChico.sort()
-        return self.listaFarmaboxChico
-
-    def grandesOrdenados(self):
-        self.listaFarmaboxGrande.sort()
-        return self.listaFarmaboxGrande
-   
 class Btn(Button):
 
     def __init__(self, root, imagenNormal, imagenHover, *args, **kwargs):
@@ -272,85 +226,3 @@ class VentanaHija():
         self.contenedor = Frame(self.ventana,height=alto-self.altoLinea,width=ancho, background=COLOR_FONDO)
         self.contenedor.pack(fill='both', expand=True)
         linea(frameLinea,ancho,0,1)
-
-class ManagerScanner():
-    def __init__(self,ventana):
-        self.ventana = ventana
-        self.semaforo = Semaphore()
-        self.lectura = False
-        self.dato = 0
-        self.lector1 = LectorPuerto(puertoScanner1,baudScanner1,self)
-        self.lector2 = LectorPuerto(puertoScanner2,baudScanner2,self)
-
-        if self.lector1 != None :
-            self.lector1.iniciar()
-
-        if self.lector2 != None :
-            self.lector2.iniciar()      
-    
-    def recibirDato(self,dato):
-        sleep(delayScanner)
-        self.ventana.recibirDatos(self.dato,dato)
-        self.dato = 0
-
-class LectorPuerto():
-    def __init__(self,com,baud,managerScanner):
-        self.com = com
-        self.baudrate = int(baud)
-        self.manager = managerScanner
-
-    def iniciar(self):
-        self.hilo = Thread(target=self.hiloLector)
-        self.hilo.daemon = True
-        self.hilo.start()
-
-    def hiloLector(self):
-        self.puerto = serial.Serial(self.com,self.baudrate)
-        self.abrirPuerto()
-        self.escuchar() 
-
-    def terminarHilo(self):
-        if self.puerto != None:
-            self.puerto.close()
-        self.hilo.join()
-
-    def abrirPuerto(self):
-        try:
-            self.puerto.close()
-            self.puerto.open()
-        except Exception as e:
-            print("Error al abrir puerto Serial: " + str(e))
-            exit()
-
-    def escuchar(self):
-        if self.puerto.isOpen():
-            print("Puerto Serial "+self.com+" abierto")
-            dato = []
-            try:
-                while True:
-
-                    c = self.puerto.read()
-            
-                    if c.decode('Ascii') != '\r':
-                        dato.append(c.decode('Ascii'))
-                    else :
-                        numeroGenerado = int(''.join(dato))
-                        self.manager.semaforo.acquire()
-
-                        if self.manager.lectura:
-                            self.manager.dato = numeroGenerado
-                            dato = []
-                            self.manager.semaforo.release()
-                        else:    
-                            self.manager.lectura = True
-                            self.manager.semaforo.release()
-                            self.manager.recibirDato(numeroGenerado)
-                            self.manager.lectura = False
-                            dato = []
-                        
-            except Exception as e1:
-                print ("Error en comunicación...: " + str(e1))
-
-        else:
-            print("No se puede abrir el puerto Serial ")
-            exit()
