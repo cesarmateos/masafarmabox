@@ -1,3 +1,6 @@
+from winsound import Beep
+from threading import Thread
+
 import Recursos
 import BaseDatos
 
@@ -48,6 +51,9 @@ class Recepcion:
         self.rechazados += 1
         ventana.nuevoRechazado()
         self.listaRechazados.append((nroFBA,nroFBB,motivo))
+        hilo = Thread(target=self.sonido)
+        hilo.daemon = True
+        hilo.start()
 
     def cantidadChicos(self):
         return len(self.listaFarmaboxChico)
@@ -74,4 +80,9 @@ class Recepcion:
         if farmabox == None :
             return False
         return True
+
+    def sonido(self):
+        Beep(900,100)
+        Beep(700,400)
+
    

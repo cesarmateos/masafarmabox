@@ -1,4 +1,5 @@
 import sqlite3 as sql
+import csv
 
 from datetime import datetime
 import Recursos
@@ -99,6 +100,50 @@ def obtenerRadios():
     cursor.close
     return radios
 
+def obtenerTransportistas():
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+
+    querySQL = ('SELECT * FROM TRANSPORTISTA')
+
+    resultado = cursor.execute(querySQL)
+    transportistas = list(cursor.fetchall())
+    cursor.close
+    return transportistas
+
+def obtenerEmpresas():
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+
+    querySQL = ('SELECT * FROM EMPRESA')
+
+    resultado = cursor.execute(querySQL)
+    empresas = list(cursor.fetchall())
+    cursor.close
+    return empresas
+
+def obtenerTiposModificacion():
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+
+    querySQL = ('SELECT * FROM TIPOS_MODIFICACION')
+
+    resultado = cursor.execute(querySQL)
+    tiposMod = list(cursor.fetchall())
+    cursor.close
+    return tiposMod
+
+def obtenerMotivosRechazo():
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+
+    querySQL = ('SELECT * FROM MOTIVO_RECHAZO')
+
+    resultado = cursor.execute(querySQL)
+    rechazo = list(cursor.fetchall())
+    cursor.close
+    return rechazo
+
 def encontrarFarmabox(NroFarmabox):
     conexion = conectarBase()
     cursor = conexion.cursor()
@@ -115,3 +160,34 @@ def encontrarFarmabox(NroFarmabox):
 
     cursor.close
     return farmabox
+
+def buscarRecepciones():
+    pass
+
+def cargarFarmaboxDesdeCSV(archivo,tipo:int):
+    #Conecto y armo cursor
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+
+    #Armo y ejecuto la Query
+    now = datetime.now()
+    #fechaHora = now.strftime("%Y/%m/%d %H:%M:%S")
+    querySQL = 'INSERT INTO MODIFICACION (CodTipoModificacion) VALUES (?)'
+    cursor.execute(querySQL,(str(tipo)))
+
+    #Obtengo ID
+    idGenerado = cursor.lastrowid
+
+    querySQL2 = 'INSERT INTO FB_X_MODIFICACION (NroFarmabox,NroModificacion) VALUES (?,?)'
+    querySQL3 = 'INSERT OR REPLACE INTO FARMABOX (NroFarmabox,CodEstadoFarmabox) VALUES (?,?)'
+
+    with open(archivo, newline='') as File:  
+        reader = csv.DictReader(File)
+        for row in reader:    
+            cursor.execute(querySQL3,(row['NroFarmabox'],int(1)))
+            cursor.execute(querySQL2,(row['NroFarmabox'],idGenerado))
+            
+
+    conexion.commit()
+    cursor.close()
+
