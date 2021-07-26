@@ -8,7 +8,8 @@ def conectarBase():
     rutaBase = Recursos.rutaArchivo(Recursos.nombreBase)
     return sql.connect(rutaBase)
 
-def encontrarTransportista(NroTransportista):
+def encontrarTransportista(nroTransportista):
+    
     conexion = conectarBase()
     cursor = conexion.cursor()
 
@@ -17,8 +18,9 @@ def encontrarTransportista(NroTransportista):
         'JOIN RADIO ON RADIO.CodRadio = TRANSPORTISTA.CodRadioUsual '
         'JOIN EMPRESA ON EMPRESA.CodEmpresa = TRANSPORTISTA.CodEmpresa '
         'WHERE TRANSPORTISTA.NroTransportista=?')
+    
 
-    filaTransportista = cursor.execute(querySQL,(NroTransportista,))
+    filaTransportista = cursor.execute(querySQL,(nroTransportista,))
     transportista = filaTransportista.fetchone()
 
     if transportista is None:
@@ -35,7 +37,7 @@ def generarRecepcion(recepcion):
         cursor = conexion.cursor()
 
         #Obtengo datos de la recepcion
-        nroTransportista = recepcion.transportista[1]
+        nroTransportista = recepcion.transportista[0]
         codRadio = recepcion.transportista[0]
         listaChicos = recepcion.listaFarmaboxChico
         listaGrandes = recepcion.listaFarmaboxGrande
@@ -43,8 +45,7 @@ def generarRecepcion(recepcion):
         tapas = recepcion.tapas
 
         #Armo y ejecuto la Query
-        now = datetime.now()
-        fechaHora = now.strftime("%Y/%m/%d %H:%M:%S")
+        fechaHora = datetime.now()
         querySQL = 'INSERT INTO RECEPCION (CodRadio, NroTransportista, FechaRecepcion, Tapas) VALUES (?,?,?,?)'
         cursor.execute(querySQL,(codRadio,nroTransportista,fechaHora,tapas))
         
@@ -95,7 +96,7 @@ def obtenerRadios():
 
     querySQL = ('SELECT * FROM RADIO')
 
-    resultado = cursor.execute(querySQL)
+    cursor.execute(querySQL)
     radios = list(cursor.fetchall())
     cursor.close
     return radios
@@ -106,7 +107,7 @@ def obtenerTransportistas():
 
     querySQL = ('SELECT * FROM TRANSPORTISTA')
 
-    resultado = cursor.execute(querySQL)
+    cursor.execute(querySQL)
     transportistas = list(cursor.fetchall())
     cursor.close
     return transportistas
@@ -117,7 +118,7 @@ def obtenerEmpresas():
 
     querySQL = ('SELECT * FROM EMPRESA')
 
-    resultado = cursor.execute(querySQL)
+    cursor.execute(querySQL)
     empresas = list(cursor.fetchall())
     cursor.close
     return empresas
@@ -128,7 +129,7 @@ def obtenerTiposModificacion():
 
     querySQL = ('SELECT * FROM TIPOS_MODIFICACION')
 
-    resultado = cursor.execute(querySQL)
+    cursor.execute(querySQL)
     tiposMod = list(cursor.fetchall())
     cursor.close
     return tiposMod
@@ -139,7 +140,7 @@ def obtenerMotivosRechazo():
 
     querySQL = ('SELECT * FROM MOTIVO_RECHAZO')
 
-    resultado = cursor.execute(querySQL)
+    cursor.execute(querySQL)
     rechazo = list(cursor.fetchall())
     cursor.close
     return rechazo
@@ -161,8 +162,63 @@ def encontrarFarmabox(NroFarmabox):
     cursor.close
     return farmabox
 
-def buscarRecepciones():
-    pass
+def buscarRecepciones(fechaDesde,fechaHasta,radio,transporte,empresa):
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+    argumentosLista = []
+    primero = True
+
+    
+    parte1 = ('SELECT NroRecepcion,FechaRecepcion,CodRadio,TRANSPORTISTA.NombreTransportista,EMPRESA.NombreEmpresa,Tapas,Procesado FROM RECEPCION '
+        'JOIN TRANSPORTISTA ON TRANSPORTISTA.NroTransportista = RECEPCION.NroTransportista '
+        'JOIN EMPRESA ON EMPRESA.CodEmpresa = TRANSPORTISTA.CodEmpresa ')
+    parte2 = ''
+    parte3 = ''
+    
+    if fechaDesde == '' and fechaHasta =='':
+        pass
+    else:
+        primero = False
+        parte2 = 'WHERE FechaRecepcion BETWEEN ? AND ? '
+        fechaDesdeFormateada = None
+        fechaHastaFormateada = None
+        if fechaDesde != '' and fechaHasta !='':
+            desde = formatearDesde(fechaDesde)
+            fechaDesdeFormateada = datetime.strptime(desde, "%Y/%m/%d %H:%M:%S")
+            hasta = formatearHasta(fechaHasta)
+            fechaHastaFormateada = datetime.strptime(hasta, "%Y/%m/%d %H:%M:%S")
+        elif fechaDesde != '' and fechaHasta =='':
+            desde = formatearDesde(fechaDesde)
+            fechaDesdeFormateada = datetime.strptime(desde, "%Y/%m/%d %H:%M:%S")
+            fechaHastaFormateada = datetime.now()
+
+        else:
+            hasta = formatearHasta(fechaHasta)
+            fechaDesdeFormateada = datetime.strptime('2021/07/22 15:44:23', "%Y/%m/%d %H:%M:%S")
+            fechaHastaFormateada = datetime.strptime(hasta, "%Y/%m/%d %H:%M:%S")
+
+        argumentosLista.append(fechaDesdeFormateada)
+        argumentosLista.append(fechaHastaFormateada)   
+
+    if radio == 'TODOS':
+        pass
+    else:
+        if primero:
+            parte3 = 'WHERE CodRadio=? '
+        else:
+            pass
+    parte4 = 'NombreTransportista=?'
+    parte5 = 'NombreEmpresa=?'
+   
+    querySQL =  parte1 + parte2 
+
+    argumentos = tuple(argumentosLista)
+    cursor.execute(querySQL,(argumentos))
+    tiposMod = list(cursor.fetchall())
+    cursor.close
+    for fila in tiposMod:
+        print(fila)
+    return tiposMod
 
 def cargarFarmaboxDesdeCSV(archivo,tipo:int):
     #Conecto y armo cursor
@@ -191,3 +247,14 @@ def cargarFarmaboxDesdeCSV(archivo,tipo:int):
     conexion.commit()
     cursor.close()
 
+def formatearDesde(fecha):
+    if len(fecha)== 8:
+        return "20"+fecha[6:8]+"/"+fecha[3:5]+"/"+fecha[0:2]+' 00:00:00'
+    else:
+        return "20"+fecha[5:7]+"/"+fecha[2:4]+"/"+fecha[0:1]+' 00:00:00'
+
+def formatearHasta(fecha):
+    if len(fecha)== 8:
+        return "20"+fecha[6:8]+"/"+fecha[3:5]+"/"+fecha[0:2]+' 23:59:59'
+    else:
+        return "20"+fecha[5:7]+"/"+fecha[2:4]+"/"+fecha[0:1]+' 23:59:59'

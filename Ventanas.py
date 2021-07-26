@@ -1,6 +1,8 @@
 from tkinter import *
 from tkinter import messagebox
 from tkinter.ttk import Combobox
+from typing import Pattern
+from tkcalendar import Calendar
 import BaseDatos
 import Recursos
 import Recepcion
@@ -65,8 +67,8 @@ class Ventana(Tk):
 
         #---Frame contenedor de Widgets---
         self.contenedor = Frame(self,bg=Widgets.COLOR_FONDO,height=self.altoFrameMedio) 
-        self.contenedor.pack(side = TOP, fill = X, expand = True)
         self.contenedor.propagate(False)
+        self.contenedor.pack(side = TOP, fill = X, expand = True)
 
         #---Frame inferior---
         self.frameInferior = Frame(self,bg=Widgets.COLOR_FONDO,height=self.altoFrameInferior) 
@@ -97,7 +99,7 @@ class Ventana(Tk):
         entradaQR.place(x=235,y=250)  
 
         #Boton Lupa
-        botonLupa = Widgets.Btn(self.contenedor, imagenNormal='Lupa.png', imagenHover='LupaHover.png', command=lambda : self.validarTransportista(entradaQR))
+        botonLupa = Widgets.Btn(self.contenedor, imagenNormal='Lupa.png', imagenHover='LupaHover.png', command=lambda: self.enterPricipal(self, entradaQR))
         botonLupa.place(x=600,y=245) 
 
         #Activo el enter
@@ -105,10 +107,10 @@ class Ventana(Tk):
 
 
         #-------------FRAME INFERIOR------------
-        #Boton Recepciones            
-        botonRecepciones = Widgets.botonPrincipal(self.frameInferior,'Consultas',self.pantallaRecepciones)
+        #Boton Consultas         
+        botonConsultas = Widgets.botonPrincipal(self.frameInferior,'Consultas',self.pantallaConsultas)
         #botonRecepciones = Recursos.botonPrincipal(self.frameInferior,'Recepciones',lambda : PantallaRecepciones(self))
-        botonRecepciones.pack(side=RIGHT, anchor=SE)
+        botonConsultas.pack(side=RIGHT, anchor=SE)
 
         #Boton Configuración       
         botonConfiguración = Widgets.botonPrincipal(self.frameInferior,'Configuración',self.pantallaConfiguracion)
@@ -244,7 +246,7 @@ class Ventana(Tk):
         botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Finalizar',self.lanzarVentanaFinalizarCarga)         
         botonFinalizar.grid(row=3,column=6,columnspan=2,sticky=E)
      
-    def pantallaRecepciones(self):
+    def pantallaConsultas(self):
         self.pantalla = 3
 
         #Limpio pantalla de widgets anteriores
@@ -257,135 +259,177 @@ class Ventana(Tk):
         #-------------FRAME MEDIO------------
         margenY = 2
 
-        #Armo un Frame con márgenes
-        anchoFrame = self.anchoVentana-Widgets.MARGEN_X*2  
-        frameMedio = Frame(self.contenedor,height=self.altoFrameMedio,width=anchoFrame,background=Widgets.COLOR_FONDO)
-        frameMedio.pack(fill=BOTH,expand=True,padx=Widgets.MARGEN_X,side=TOP)
+        #Divido la pantalla en dos frames
+        anchoFrame = (self.anchoVentana/2) - Widgets.MARGEN_X
+        frameIzquierdo = Frame(self.contenedor,height=self.altoFrameMedio,width=anchoFrame,background=Widgets.COLOR_FONDO)
+        frameIzquierdo.propagate(False)
+        frameIzquierdo.pack(fill=BOTH,expand=True,padx=(Widgets.MARGEN_X,0),side=LEFT)
+        frameDerecho = Frame(self.contenedor,height=self.altoFrameMedio,width=anchoFrame,background=Widgets.COLOR_FONDO)
+        frameDerecho.propagate(False)
+        frameDerecho.pack(fill=BOTH,expand=True,side=RIGHT,padx=(0,Widgets.MARGEN_X))
+        
 
         #----Seccion Recepciones----
-        seccionRecepciones = Widgets.Seccion(frameMedio," Recepciones",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
+        seccionRecepciones = Widgets.Seccion(frameIzquierdo," Recepciones",width=anchoFrame,bg=Widgets.COLOR_FONDO)
         seccionRecepciones.grid(row=0,column=0)
-
-        #Lado Izquierdo
+        
+        
+        #Fecha Desde
         Label(seccionRecepciones.contenido, text="Fecha desde",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=0,column=0,sticky=E,pady=margenY,padx=(0,4))
-        fechaDesde = Entry(seccionRecepciones.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=10,highlightthickness=2)
-        fechaDesde.grid(row=0,column=1,sticky=E,pady=margenY)
-        Label(seccionRecepciones.contenido, text="Fecha hasta",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=0,column=2,sticky=E,padx=(10,4),pady=margenY)
-        fechaHasta = Entry(seccionRecepciones.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=10,highlightthickness=2)
-        fechaHasta.grid(row=0,column=3,sticky=E,pady=margenY)
+        fechaDesdeRecep = Entry(seccionRecepciones.contenido, font=(Widgets.FUENTE_PRINCIPAL,9), width=10,highlightthickness=2)
+        fechaDesdeRecep.grid(row=0,column=1,sticky=E,pady=margenY)
+        botonPickFechaDesdeRecepcion = Widgets.botonMicro(seccionRecepciones.contenido,"Elegir",lambda: VentanaCalendario(self,fechaDesdeRecep))
+        botonPickFechaDesdeRecepcion.grid(row=0,column=2,sticky=E,pady=margenY,padx=2)   
 
-        Label(seccionRecepciones.contenido, text="Radio",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=1,column=0,sticky=E,pady=margenY,padx=(0,4))
+        #Fecha Hasta
+        Label(seccionRecepciones.contenido, text="Fecha hasta",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=1,column=0,sticky=E,padx=(10,4),pady=margenY)
+        fechaHastaRecep = Entry(seccionRecepciones.contenido, font=(Widgets.FUENTE_PRINCIPAL,9), width=10,highlightthickness=2)
+        fechaHastaRecep.grid(row=1,column=1,sticky=E,pady=margenY)
+        botonPickFechaHastaRecepcion = Widgets.botonMicro(seccionRecepciones.contenido,"Elegir",lambda: VentanaCalendario(self,fechaHastaRecep))
+        botonPickFechaHastaRecepcion.grid(row=1,column=2,sticky=E,pady=margenY,padx=2)  
+        
+        #Radio
+        Label(seccionRecepciones.contenido, text="Radio",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=2,column=0,sticky=E,pady=margenY,padx=(0,4))
         radios = BaseDatos.obtenerRadios()
         valoresRadio = [valores[0]+" - "+valores[1] for valores in radios]
         valoresRadio.append("TODOS")
-        lista = Combobox(seccionRecepciones.contenido,values=valoresRadio,state='readonly',width=40)
-        lista.current(len(valoresRadio)-1)
-        lista.grid(row=1,column=1,sticky=W,columnspan=3,pady=margenY)
-
-        Label(seccionRecepciones.contenido, text="Transportista",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=2,column=0,sticky=E,pady=margenY,padx=(0,4))
+        listaRadio = Combobox(seccionRecepciones.contenido,values=valoresRadio,state='readonly',width=40)
+        listaRadio.current(len(valoresRadio)-1)
+        listaRadio.grid(row=2,column=1,sticky=W,columnspan=3,pady=margenY)
+        
+        #Transportista
+        Label(seccionRecepciones.contenido, text="Transportista",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=3,column=0,sticky=E,pady=margenY,padx=(0,4))
         transportistas = BaseDatos.obtenerTransportistas()
         valoresTransp = [str(valores[0])+" - "+valores[1] for valores in transportistas]
         valoresTransp.append("TODOS")
-        lista = Combobox(seccionRecepciones.contenido,values=valoresTransp,state='readonly',width=40)
-        lista.current(len(valoresTransp)-1)
-        lista.grid(row=2,column=1,sticky=W,columnspan=3,pady=margenY)
+        listaTransp = Combobox(seccionRecepciones.contenido,values=valoresTransp,state='readonly',width=40)
+        listaTransp.current(len(valoresTransp)-1)
+        listaTransp.grid(row=3,column=1,sticky=W,columnspan=3,pady=margenY)
 
-        Label(seccionRecepciones.contenido, text="Empresa",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=3,column=0,sticky=E,pady=margenY,padx=(0,4))
+        
+        #Empresa
+        Label(seccionRecepciones.contenido, text="Empresa",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=4,column=0,sticky=E,pady=margenY,padx=(0,4))
         empresas = BaseDatos.obtenerEmpresas()
         valoresEmpresa = [valores[1] for valores in empresas]
         valoresEmpresa.append("TODOS")
-        lista = Combobox(seccionRecepciones.contenido,values=valoresEmpresa,state='readonly',width=40)
-        lista.current(len(valoresEmpresa)-1)
-        lista.grid(row=3,column=1,sticky=W,columnspan=3,pady=margenY)
+        listaEmpresa = Combobox(seccionRecepciones.contenido,values=valoresEmpresa,state='readonly',width=40)
+        listaEmpresa.current(len(valoresEmpresa)-1)
+        listaEmpresa.grid(row=4,column=1,sticky=W,columnspan=3,pady=margenY)
 
-        botonBuscarRecepcionA = Widgets.botonMicro(seccionRecepciones.contenido,"Buscar",lambda: self.BaseDatos.buscarRecepciones())
-        botonBuscarRecepcionA.grid(row=4,column=3,sticky=E,pady=(margenY,0))   
+        
+        #Buscar
+        botonBuscarRecepcionA = Widgets.botonMicro(seccionRecepciones.contenido,"Buscar",lambda: VentanaRecepciones(self,fechaDesdeRecep.get(),fechaHastaRecep.get(),listaRadio.get(),listaTransp.get(),listaEmpresa.get()))
+        botonBuscarRecepcionA.grid(row=5,column=2,sticky=E,pady=(margenY,0))   
 
-
-        #Lado Derecho
-        Label(seccionRecepciones.contenido, text="Número de Recepción",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=0,column=5,sticky=E,pady=margenY,padx=(70,4))
-        detalleRecepcion = Entry(seccionRecepciones.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=13,highlightthickness=2)
-        detalleRecepcion.grid(row=0,column=6,sticky=E,pady=margenY)
+        
+        #Detalle Recepción
+        Label(seccionRecepciones.contenido, text="Recepción Nro",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=6,column=0,sticky=E,pady=(20,margenY),padx=(0,4))
+        detalleRecepcion = Entry(seccionRecepciones.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=18,highlightthickness=2)
+        detalleRecepcion.grid(row=6,column=1,sticky=W,pady=(20,margenY))
         botonBuscarRecepcionB = Widgets.botonMicro(seccionRecepciones.contenido,"Buscar",lambda: self.BaseDatos.buscarRecepciones())
-        botonBuscarRecepcionB.grid(row=4,column=7,sticky=E,pady=(margenY,0))   
+        botonBuscarRecepcionB.grid(row=6,column=2,sticky=E,pady=(20,margenY))   
+        
 
-
-
+        
         #----Seccion Farmabox----
-        seccionFarmabox = Widgets.Seccion(frameMedio," Farmabox",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
+        seccionFarmabox = Widgets.Seccion(frameIzquierdo," Farmabox (Kardex)",width=anchoFrame,bg=Widgets.COLOR_FONDO)
         seccionFarmabox.grid(row=1,column=0)
-
+        
+        #Fecha Desde
         Label(seccionFarmabox.contenido, text="Fecha desde",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=0,column=0,sticky=E,pady=margenY,padx=(0,4))
         fechaDesdeFarma = Entry(seccionFarmabox.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=10,highlightthickness=2)
         fechaDesdeFarma.grid(row=0,column=1,sticky=E,pady=margenY)
-        Label(seccionFarmabox.contenido, text="Fecha hasta",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=0,column=2,sticky=E,padx=(10,4),pady=margenY)
+        botonPickFechaDesdeFarma = Widgets.botonMicro(seccionFarmabox.contenido,"Elegir",lambda: VentanaCalendario(self,fechaDesdeFarma))
+        botonPickFechaDesdeFarma.grid(row=0,column=2,sticky=E,pady=margenY,padx=(4,0)) 
+
+        #Fecha Hasta
+        Label(seccionFarmabox.contenido, text="Fecha hasta",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=1,column=0,sticky=E,padx=(10,4),pady=margenY)
         fechaHastaFarma = Entry(seccionFarmabox.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=10,highlightthickness=2)
-        fechaHastaFarma.grid(row=0,column=3,sticky=E,pady=margenY)
+        fechaHastaFarma.grid(row=1,column=1,sticky=E,pady=margenY)
+        botonPickFechaHastaFarma = Widgets.botonMicro(seccionFarmabox.contenido,"Elegir",lambda: VentanaCalendario(self,fechaHastaFarma))
+        botonPickFechaHastaFarma.grid(row=1,column=2,sticky=E,pady=margenY,padx=(4,0)) 
 
-        Label(seccionFarmabox.contenido, text="Farmabox Nro",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=0,column=4,sticky=E,pady=margenY,padx=(5,4))
+        #Número Farmabox
+        Label(seccionFarmabox.contenido, text="Nro Farmabox",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=2,column=0,sticky=E,pady=margenY,padx=(20,4))
         nroFarmabox = Entry(seccionFarmabox.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=10,highlightthickness=2)
-        nroFarmabox.grid(row=0,column=5,sticky=E,pady=margenY)
+        nroFarmabox.grid(row=2,column=1,sticky=E,pady=margenY)
 
-
+        #Buscar Farmabox
         botonBuscarFarmabox = Widgets.botonMicro(seccionFarmabox.contenido,"Buscar",lambda: self.BaseDatos.buscarRecepciones())
-        botonBuscarFarmabox.grid(row=0,column=6,sticky=E,pady=(margenY,0),padx=(10,0))  
+        botonBuscarFarmabox.grid(row=3,column=3,sticky=E,pady=(margenY,0),padx=0)  
 
 
+        
         #--Seccion Rechazados--
-        seccionRechazados = Widgets.Seccion(frameMedio," Rechazados",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
-        seccionRechazados.grid(row=2,column=0)
-
+        seccionRechazados = Widgets.Seccion(frameDerecho," Rechazados",width=anchoFrame,bg=Widgets.COLOR_FONDO)
+        seccionRechazados.grid(row=0,column=0)
+        
+        #Fecha Desde
         Label(seccionRechazados.contenido, text="Fecha desde",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=0,column=0,sticky=E,pady=margenY,padx=(0,4))
         fechaRechazDesde = Entry(seccionRechazados.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=10,highlightthickness=2)
         fechaRechazDesde.grid(row=0,column=1,sticky=E,pady=margenY)
-        Label(seccionRechazados.contenido, text="Fecha hasta",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=0,column=2,sticky=E,padx=(10,4),pady=margenY)
-        fechaRechazHasta = Entry(seccionRechazados.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=10,highlightthickness=2)
-        fechaRechazHasta.grid(row=0,column=3,sticky=E,pady=margenY)
+        botonPickFechaDesdeRechaz = Widgets.botonMicro(seccionRechazados.contenido,"Elegir",lambda: VentanaCalendario(self,fechaRechazDesde))
+        botonPickFechaDesdeRechaz.grid(row=0,column=2,sticky=E,pady=margenY,padx=(10,0))
 
-        Label(seccionRechazados.contenido, text="Motivo",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=0,column=4,sticky=E,pady=margenY,padx=(5,4))
+
+        #Fecha Hasta
+        Label(seccionRechazados.contenido, text="Fecha hasta",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=1,column=0,sticky=E,padx=(10,4),pady=margenY)
+        fechaRechazHasta = Entry(seccionRechazados.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=10,highlightthickness=2)
+        fechaRechazHasta.grid(row=1,column=1,sticky=E,pady=margenY)
+        botonPickFechaHastaRechaz = Widgets.botonMicro(seccionRechazados.contenido,"Elegir",lambda: VentanaCalendario(self,fechaRechazHasta))
+        botonPickFechaHastaRechaz.grid(row=1,column=2,sticky=E,pady=margenY,padx=(10,0))
+        
+        #Motivo
+        Label(seccionRechazados.contenido, text="Motivo",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=2,column=0,sticky=E,pady=margenY,padx=(5,4))
         motivosRechazo = BaseDatos.obtenerMotivosRechazo()
         valoresMotivoRechazo = [valores[1] for valores in motivosRechazo]
         valoresMotivoRechazo.append("TODOS")
         lista = Combobox(seccionRechazados.contenido,values=valoresMotivoRechazo,state='readonly',width=40)
         lista.current(len(valoresMotivoRechazo)-1)
-        lista.grid(row=0,column=5,sticky=W,pady=margenY)
+        lista.grid(row=2,column=1,columnspan=3,sticky=W,pady=margenY)
 
+        #Buscar
         botonBuscarRechazo = Widgets.botonMicro(seccionRechazados.contenido,"Buscar",lambda: self.BaseDatos.buscarRecepciones())
-        botonBuscarRechazo.grid(row=0,column=8,sticky=E,pady=(margenY,0),padx=(10,0))  
+        botonBuscarRechazo.grid(row=3,column=3,columnspan=3,sticky=E,pady=(margenY,0))  
 
-
+        
         #--Seccion Movimientos--
-        seccionMovimientos = Widgets.Seccion(frameMedio," Movimientos",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
+        seccionMovimientos = Widgets.Seccion(frameDerecho," Modificaciones Farmabox",width=anchoFrame,bg=Widgets.COLOR_FONDO)
         seccionMovimientos.grid(row=3,column=0)
-
-
-        #Lado Izquierdo
+        
+        #Fecha Desde
         Label(seccionMovimientos.contenido, text="Fecha desde",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=0,column=0,sticky=E,pady=margenY,padx=(0,4))
-        fechaDesdeMov = Entry(seccionMovimientos.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=10,highlightthickness=2)
-        fechaDesdeMov.grid(row=0,column=1,sticky=E,pady=margenY)
-        Label(seccionMovimientos.contenido, text="Fecha hasta",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=0,column=2,sticky=E,padx=(10,4),pady=margenY)
-        fechaHastaMov = Entry(seccionMovimientos.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=10,highlightthickness=2)
-        fechaHastaMov.grid(row=0,column=3,sticky=E,pady=margenY)
+        fechaModDesde = Entry(seccionMovimientos.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=10,highlightthickness=2)
+        fechaModDesde.grid(row=0,column=1,sticky=E,pady=margenY)
+        botonPickFechaDesdeMod = Widgets.botonMicro(seccionMovimientos.contenido,"Elegir",lambda: VentanaCalendario(self,fechaModDesde))
+        botonPickFechaDesdeMod.grid(row=0,column=2,sticky=E,pady=margenY,padx=(10,0))
 
-        Label(seccionMovimientos.contenido, text="Modificación",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=1,column=0,sticky=E,pady=margenY,padx=(0,4))
+
+        #Fecha Hasta
+        Label(seccionMovimientos.contenido, text="Fecha hasta",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=1,column=0,sticky=E,padx=(10,4),pady=margenY)
+        fechaModHasta = Entry(seccionMovimientos.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=10,highlightthickness=2)
+        fechaModHasta.grid(row=1,column=1,sticky=E,pady=margenY)
+        botonPickFechaHastaMod = Widgets.botonMicro(seccionMovimientos.contenido,"Elegir",lambda: VentanaCalendario(self,fechaModHasta))
+        botonPickFechaHastaMod.grid(row=1,column=2,sticky=E,pady=margenY,padx=(10,0))
+        
+        Label(seccionMovimientos.contenido, text="Modificación",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=2,column=0,sticky=E,pady=margenY,padx=(0,4))
         tiposModificacion = BaseDatos.obtenerTiposModificacion()
         valoresTipoMod = [valores[1] for valores in tiposModificacion]
         valoresTipoMod.append("TODOS")
         lista = Combobox(seccionMovimientos.contenido,values=valoresTipoMod,state='readonly',width=40)
         lista.current(len(valoresTipoMod)-1)
-        lista.grid(row=1,column=1,sticky=W,columnspan=3,pady=margenY)
+        lista.grid(row=2,column=1,sticky=W,columnspan=3,pady=margenY)
 
         botonBuscarMovA = Widgets.botonMicro(seccionMovimientos.contenido,"Buscar",lambda: self.BaseDatos.buscarRecepciones())
-        botonBuscarMovA.grid(row=2,column=3,sticky=E,pady=(margenY,0))   
+        botonBuscarMovA.grid(row=3,column=3,sticky=E,pady=(margenY,0))   
 
-
-        #Lado Derecho
-        Label(seccionMovimientos.contenido, text="Número de Movimiento",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=0,column=5,sticky=E,pady=margenY,padx=(70,4))
-        detalleMovimiento = Entry(seccionMovimientos.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=13,highlightthickness=2)
-        detalleMovimiento.grid(row=0,column=6,sticky=E,pady=margenY)
+        
+        Label(seccionMovimientos.contenido, text="Modificación Nro",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=4,column=0,sticky=E,pady=(20,0),padx=(0,4))
+        detalleMovimiento = Entry(seccionMovimientos.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=18,highlightthickness=2)
+        detalleMovimiento.grid(row=4,column=1,columnspan=3,sticky=W,pady=(20,0))
         botonBuscarMovB = Widgets.botonMicro(seccionMovimientos.contenido,"Buscar",lambda: self.BaseDatos.buscarRecepciones())
-        botonBuscarMovB.grid(row=2,column=7,sticky=E,pady=(margenY,0)) 
-
+        botonBuscarMovB.grid(row=4,column=3,sticky=E,pady=(20,0)) 
+        
 
 
         #-------------FRAME INFERIORR------------
@@ -426,7 +470,7 @@ class Ventana(Tk):
 
 
         #--Seccion Scanner 1--
-        seccionScannner1 = Widgets.Seccion(frameMedio," Sincronización Scanners",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
+        seccionScannner1 = Widgets.Seccion(frameMedio," Scanner 1",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
         seccionScannner1.grid(row=0,column=0)
 
         #Puerto Scanner 1
@@ -448,7 +492,7 @@ class Ventana(Tk):
         botonCambiarBaud1.grid(row=0,column=5,sticky=W)
 
         #--Seccion Scanner 2--
-        seccionScannner2 = Widgets.Seccion(frameMedio," Sincronización Scanners",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
+        seccionScannner2 = Widgets.Seccion(frameMedio," Scanner 2",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
         seccionScannner2.grid(row=1,column=0)
 
         #Puerto Scanner 2
@@ -470,7 +514,7 @@ class Ventana(Tk):
         botonCambiarBaud2.grid(row=0,column=5,sticky=W)
 
         #--Seccion Sincronizacion--
-        seccionSincro = Widgets.Seccion(frameMedio," Sincronización Scanners",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
+        seccionSincro = Widgets.Seccion(frameMedio," Sincronización de Scanners",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
         seccionSincro.grid(row=2,column=0)
 
         #Tolerancia
@@ -553,12 +597,11 @@ class Ventana(Tk):
         for widgets in self.frameInferior.winfo_children():
             widgets.destroy()
 
-    def validarTransportista(self,entradaQR):
-        nroTransportista = entradaQR.get()
-        entradaQR.delete(0, 'end')
+    def validarTransportista(self,nroTransportista):
         tuplaResultadoQuery = BaseDatos.encontrarTransportista(nroTransportista)
+        
         if (tuplaResultadoQuery == None):
-            messagebox.showinfo(message="El transportista "+nroTransportista+" no existe", title="Transportista no encontrado")
+            messagebox.showinfo(message="El transportista "+str(nroTransportista)+" no existe", title="Transportista no encontrado")
         else:
             transportista = list(tuplaResultadoQuery)
             self.limpiarFrame()
@@ -621,7 +664,9 @@ class Ventana(Tk):
         self.marcadorRechazados.set(str(self.recepcion.rechazados))
 
     def enterPricipal(self,event,entradaQR):
-        self.validarTransportista(entradaQR)
+        nroTransportista = entradaQR.get()
+        entradaQR.delete(0, 'end')
+        self.validarTransportista(nroTransportista)
     
     def recibirDatos(self,dato1,dato2):
         if self.pantalla == 1:
@@ -651,6 +696,9 @@ class Ventana(Tk):
 
     def reiniciar(self):
         os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
+
+    def buscarRecepciones(self):
+        pass
 
 class VentanaTapas(Widgets.VentanaHija):
     def __init__(self,ventanaMadre,ancho,alto,titulo):
@@ -802,7 +850,51 @@ class VentanaFinalizarRecepcion(Widgets.VentanaHija):
         self.ventanaMadre.pantallaInicial()
         self.ventana.destroy()
 
-class PantallaRecepciones():
+class VentanaRecepciones(Widgets.VentanaHija):
+    def __init__(self,ventanaMadre,fechaD,fechaH,radio,transp,empresa):
+        ancho = 800
+        alto = 212
+
+        self.ventana = Toplevel(ventanaMadre)
+        self.ventana.title("Elija una Fecha")
+        self.ventana.geometry(str(ancho)+"x"+str(alto))
+        recepciones = BaseDatos.buscarRecepciones(fechaD,fechaH,radio,transp,empresa)
+
+
+class VentanaCalendario(Widgets.VentanaHija):
+    def __init__(self,ventanaMadre,fechaEntry):
+        
+        self.fechaEntry = fechaEntry
+
+        self.ventana = Toplevel(ventanaMadre)
+        rutaIcono = Recursos.rutaArchivo('Imagenes/Pantuflas.ico')
+        self.ventana.iconbitmap(rutaIcono)
+
+        ancho = 255
+        alto = 212
+
+        self.ventana.title("Elija una Fecha")
+        self.ventana.geometry(str(ancho)+"x"+str(alto))
+
+        # Add Calendar
+        self.calendario = Calendar(self.ventana, selectmode = 'day',date_pattern='dd/mm/yy')
+        self.calendario.pack(pady = 0)
+    
+        # Add Button and Label
+        Button(self.ventana, text = "Seleccionar Fecha",
+            command = lambda: self.guardar(event=None)).pack(pady = 0,expand=True,fill=BOTH)
+
+        self.ventana.bind('<Double-Button-1>', self.guardar)
+
+    def guardar(self,event):
+            fecha = self.calendario.get_date()
+            self.fechaEntry.delete(0,END)
+            self.fechaEntry.insert(0,fecha)
+            self.ventana.destroy()
+
+
+
+""" class PantallaRecepciones():
     def __init__(self,ventana):
         ventana.pantalla = 3
 
@@ -817,5 +909,5 @@ class PantallaRecepciones():
         #-------------FRAME INFERIORR------------
         #Boton Finalizar
         botonFinalizar = Widgets.botonPrincipal(ventana.frameInferior,'Finalizar',ventana.pantallaInicial)         
-        botonFinalizar.pack(anchor=SE)
+        botonFinalizar.pack(anchor=SE) """
     

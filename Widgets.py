@@ -95,11 +95,12 @@ class Seccion(Frame):
 
         ancho = self.cget('width')
         
+        
         linea1 = linea(self,ancho,0,1)
         linea1.grid(pady=(15,0))
-        Label(self, text=titulo,font="Verdana 12 bold",bg=COLOR_MORADO_SUAVE,fg=COLOR_MORADO,anchor=W).grid(row=1,column=0,sticky=EW)
+        Label(self, text=titulo,font="Verdana 12 bold",bg=COLOR_MORADO_SUAVE,fg=COLOR_MORADO,anchor=CENTER).grid(row=1,column=0,sticky=EW)
         linea(self,ancho,2,1)
-
+        #self.contenido.grid_columnconfigure(0,weight=1)
         self.contenido = Frame(self,width=ancho,background=COLOR_FONDO)
         self.contenido.grid(row=3,column=0,sticky=EW)
 
