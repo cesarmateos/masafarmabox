@@ -38,7 +38,7 @@ def generarRecepcion(recepcion):
 
         #Obtengo datos de la recepcion
         nroTransportista = recepcion.transportista[0]
-        codRadio = recepcion.transportista[0]
+        codRadio = recepcion.transportista[2]
         listaChicos = recepcion.listaFarmaboxChico
         listaGrandes = recepcion.listaFarmaboxGrande
         listaRechazados = recepcion.listaRechazados
@@ -169,11 +169,13 @@ def buscarRecepciones(fechaDesde,fechaHasta,radio,transporte,empresa):
     primero = True
 
     
-    parte1 = ('SELECT NroRecepcion,FechaRecepcion,CodRadio,TRANSPORTISTA.NombreTransportista,EMPRESA.NombreEmpresa,Tapas,Procesado FROM RECEPCION '
+    parte1 = ('SELECT RECEPCION.NroRecepcion,FechaRecepcion,CodRadio,TRANSPORTISTA.NombreTransportista,EMPRESA.NombreEmpresa,COUNT(FB_X_RECEPCION.NroFarmabox) AS CantidadFarmabox,Tapas,Procesado '
+        'FROM RECEPCION '
         'JOIN TRANSPORTISTA ON TRANSPORTISTA.NroTransportista = RECEPCION.NroTransportista '
-        'JOIN EMPRESA ON EMPRESA.CodEmpresa = TRANSPORTISTA.CodEmpresa ')
-    parte2 = ''
-    parte3 = ''
+        'JOIN EMPRESA ON EMPRESA.CodEmpresa = TRANSPORTISTA.CodEmpresa '
+        'JOIN FB_X_RECEPCION ON FB_X_RECEPCION.NroRecepcion = RECEPCION.NroRecepcion ')
+    parte2 = parte2 = parte3 = parte4 = parte5 = parte6 = parte7 = parte8 = ''
+
     
     if fechaDesde == '' and fechaHasta =='':
         pass
@@ -183,44 +185,94 @@ def buscarRecepciones(fechaDesde,fechaHasta,radio,transporte,empresa):
         fechaDesdeFormateada = None
         fechaHastaFormateada = None
         if fechaDesde != '' and fechaHasta !='':
-            desde = formatearDesde(fechaDesde)
-            fechaDesdeFormateada = datetime.strptime(desde, "%Y/%m/%d %H:%M:%S")
-            hasta = formatearHasta(fechaHasta)
-            fechaHastaFormateada = datetime.strptime(hasta, "%Y/%m/%d %H:%M:%S")
+            desde = fechaDesde + ' 00:00:00'
+            fechaDesdeFormateada = datetime.strptime(desde, "%d/%m/%y %H:%M:%S")
+            hasta = fechaHasta +' 23:59:59'
+            fechaHastaFormateada = datetime.strptime(hasta, "%d/%m/%y %H:%M:%S")
         elif fechaDesde != '' and fechaHasta =='':
-            desde = formatearDesde(fechaDesde)
-            fechaDesdeFormateada = datetime.strptime(desde, "%Y/%m/%d %H:%M:%S")
+            desde = fechaDesde + ' 00:00:00'
+            fechaDesdeFormateada = datetime.strptime(desde, "%d/%m/%y %H:%M:%S")
             fechaHastaFormateada = datetime.now()
 
         else:
-            hasta = formatearHasta(fechaHasta)
+            hasta = fechaHasta +' 23:59:59'
             fechaDesdeFormateada = datetime.strptime('2021/07/22 15:44:23', "%Y/%m/%d %H:%M:%S")
-            fechaHastaFormateada = datetime.strptime(hasta, "%Y/%m/%d %H:%M:%S")
+            fechaHastaFormateada = datetime.strptime(hasta, "%d/%m/%y %H:%M:%S")
 
         argumentosLista.append(fechaDesdeFormateada)
         argumentosLista.append(fechaHastaFormateada)   
 
-    if radio == 'TODOS':
+    if radio == '00':
         pass
     else:
         if primero:
-            parte3 = 'WHERE CodRadio=? '
+            parte3 ='WHERE '
+            primero = False 
+            
         else:
-            pass
-    parte4 = 'NombreTransportista=?'
-    parte5 = 'NombreEmpresa=?'
+            parte3 ='AND '
+        parte4 = 'CodRadio=? '
+        argumentosLista.append(radio)
+
+    if transporte == 0:
+        pass
+    else:
+        if primero:
+            parte5 ='WHERE '
+            primero = False 
+            
+        else:
+            parte5 ='AND '
+        parte6 = 'RECEPCION.NroTransportista=? '
+        argumentosLista.append(transporte)
+
+
+    if empresa == 0:
+        pass
+    else:
+        if primero:
+            parte7 ='WHERE ' 
+            
+        else:
+            parte7 ='AND '
+        parte8 = 'EMPRESA.CodEmpresa=? '
+        argumentosLista.append(empresa)
+
    
-    querySQL =  parte1 + parte2 
+    querySQL =  parte1 + parte2 + parte3 + parte4 + parte5 + parte6 + parte7+ parte8
 
     argumentos = tuple(argumentosLista)
     cursor.execute(querySQL,(argumentos))
-    tiposMod = list(cursor.fetchall())
+
+    recepciones = list(cursor.fetchall())
     cursor.close
-    for fila in tiposMod:
+
+    for fila in recepciones:
         print(fila)
-    return tiposMod
+
+    return recepciones
+
+def buscarRecepcion(nroRecepcion):
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+
+    if nroRecepcion != '':
+        querySQL = ('SELECT '
+            'RECEPCION.NroRecepcion,FechaRecepcion,CodRadio,TRANSPORTISTA.NombreTransportista,EMPRESA.NombreEmpresa, FB_X_RECEPCION.NroFarmabox,Tapas,Procesado '
+            'FROM RECEPCION '
+            'JOIN TRANSPORTISTA ON TRANSPORTISTA.NroTransportista = RECEPCION.NroTransportista '
+            'JOIN EMPRESA ON EMPRESA.CodEmpresa = TRANSPORTISTA.CodEmpresa '
+            'JOIN FB_X_RECEPCION ON FB_X_RECEPCION.NroRecepcion = RECEPCION.NroRecepcion '
+            'WHERE FB_X_RECEPCION.NroRecepcion=?')
+
+        cursor.execute(querySQL,(nroRecepcion))
+        recepcion = list(cursor.fetchall())
+        cursor.close
+        return recepcion
+    return None
 
 def cargarFarmaboxDesdeCSV(archivo,tipo:int):
+    
     #Conecto y armo cursor
     conexion = conectarBase()
     cursor = conexion.cursor()
@@ -246,15 +298,3 @@ def cargarFarmaboxDesdeCSV(archivo,tipo:int):
 
     conexion.commit()
     cursor.close()
-
-def formatearDesde(fecha):
-    if len(fecha)== 8:
-        return "20"+fecha[6:8]+"/"+fecha[3:5]+"/"+fecha[0:2]+' 00:00:00'
-    else:
-        return "20"+fecha[5:7]+"/"+fecha[2:4]+"/"+fecha[0:1]+' 00:00:00'
-
-def formatearHasta(fecha):
-    if len(fecha)== 8:
-        return "20"+fecha[6:8]+"/"+fecha[3:5]+"/"+fecha[0:2]+' 23:59:59'
-    else:
-        return "20"+fecha[5:7]+"/"+fecha[2:4]+"/"+fecha[0:1]+' 23:59:59'

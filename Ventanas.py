@@ -1,7 +1,8 @@
 from tkinter import *
 from tkinter import messagebox
 from tkinter.ttk import Combobox
-from typing import Pattern
+from tkinter.ttk import Treeview
+from tkinter.ttk import Style
 from tkcalendar import Calendar
 import BaseDatos
 import Recursos
@@ -291,8 +292,8 @@ class Ventana(Tk):
         #Radio
         Label(seccionRecepciones.contenido, text="Radio",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=2,column=0,sticky=E,pady=margenY,padx=(0,4))
         radios = BaseDatos.obtenerRadios()
+        radios.append(("00","TODOS LOS RADIOS"))
         valoresRadio = [valores[0]+" - "+valores[1] for valores in radios]
-        valoresRadio.append("TODOS")
         listaRadio = Combobox(seccionRecepciones.contenido,values=valoresRadio,state='readonly',width=40)
         listaRadio.current(len(valoresRadio)-1)
         listaRadio.grid(row=2,column=1,sticky=W,columnspan=3,pady=margenY)
@@ -300,8 +301,8 @@ class Ventana(Tk):
         #Transportista
         Label(seccionRecepciones.contenido, text="Transportista",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=3,column=0,sticky=E,pady=margenY,padx=(0,4))
         transportistas = BaseDatos.obtenerTransportistas()
+        transportistas.append((0,"TODOS LOS TRANSPORTISTAS"))
         valoresTransp = [str(valores[0])+" - "+valores[1] for valores in transportistas]
-        valoresTransp.append("TODOS")
         listaTransp = Combobox(seccionRecepciones.contenido,values=valoresTransp,state='readonly',width=40)
         listaTransp.current(len(valoresTransp)-1)
         listaTransp.grid(row=3,column=1,sticky=W,columnspan=3,pady=margenY)
@@ -310,15 +311,15 @@ class Ventana(Tk):
         #Empresa
         Label(seccionRecepciones.contenido, text="Empresa",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=4,column=0,sticky=E,pady=margenY,padx=(0,4))
         empresas = BaseDatos.obtenerEmpresas()
-        valoresEmpresa = [valores[1] for valores in empresas]
-        valoresEmpresa.append("TODOS")
+        empresas.append((0,"TODAS LAS EMPRESAS"))
+        valoresEmpresa = [valores[1] for valores in empresas]  
         listaEmpresa = Combobox(seccionRecepciones.contenido,values=valoresEmpresa,state='readonly',width=40)
         listaEmpresa.current(len(valoresEmpresa)-1)
         listaEmpresa.grid(row=4,column=1,sticky=W,columnspan=3,pady=margenY)
 
         
         #Buscar
-        botonBuscarRecepcionA = Widgets.botonMicro(seccionRecepciones.contenido,"Buscar",lambda: VentanaRecepciones(self,fechaDesdeRecep.get(),fechaHastaRecep.get(),listaRadio.get(),listaTransp.get(),listaEmpresa.get()))
+        botonBuscarRecepcionA = Widgets.botonMicro(seccionRecepciones.contenido,"Buscar",lambda: VentanaRecepciones(self,self.anchoVentana,600,"Consulta Recepciones",fechaDesdeRecep.get(),fechaHastaRecep.get(),(listaRadio.current(),radios),(listaTransp.current(),transportistas),(listaEmpresa.current(),empresas)))
         botonBuscarRecepcionA.grid(row=5,column=2,sticky=E,pady=(margenY,0))   
 
         
@@ -326,7 +327,7 @@ class Ventana(Tk):
         Label(seccionRecepciones.contenido, text="Recepción Nro",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=6,column=0,sticky=E,pady=(20,margenY),padx=(0,4))
         detalleRecepcion = Entry(seccionRecepciones.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=18,highlightthickness=2)
         detalleRecepcion.grid(row=6,column=1,sticky=W,pady=(20,margenY))
-        botonBuscarRecepcionB = Widgets.botonMicro(seccionRecepciones.contenido,"Buscar",lambda: self.BaseDatos.buscarRecepciones())
+        botonBuscarRecepcionB = Widgets.botonMicro(seccionRecepciones.contenido,"Buscar",lambda: VentanaDetalleRecepcion(self,self.anchoVentana,600,"Detalle de Recepción",detalleRecepcion.get()))
         botonBuscarRecepcionB.grid(row=6,column=2,sticky=E,pady=(20,margenY))   
         
 
@@ -605,9 +606,12 @@ class Ventana(Tk):
         else:
             transportista = list(tuplaResultadoQuery)
             self.limpiarFrame()
+
             #--Frame Inferior--
+            botonVolver = Widgets.botonSecundario(self.frameInferior,'Cancelar',lambda: self.pantallaInicial())        
+            botonVolver.pack(side=LEFT, anchor=SW)
             botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Iniciar Recepción',lambda: self.pantallaCargaRecepcion(Recepcion.Recepcion(transportista)))        
-            botonFinalizar.pack(anchor=SE)
+            botonFinalizar.pack(side=RIGHT, anchor=SE)
 
             #--Frame Medio--
             Label(self.contenedor, text=transportista[1]+" - "+transportista[4],font=(Widgets.FUENTE_PRINCIPAL, 20),bg=Widgets.COLOR_FONDO).pack(anchor=CENTER,side=TOP,pady=(180,20))
@@ -675,7 +679,7 @@ class Ventana(Tk):
             self.recepcion.agregarFarmabox(self,dato1,dato2)
 
     def lanzarVentanaTapas(self):
-        ancho = 460
+        ancho = 450
         alto = 170
         VentanaTapas(self,ancho,alto,"Ingreso Tapas")
 
@@ -690,7 +694,7 @@ class Ventana(Tk):
         VentanaCancelaRecepcion(self,ancho,alto,"Confirmar Cancelación de Recepción")
 
     def lanzarVentanaFinalizarCarga(self):
-        ancho = 460
+        ancho = 450
         alto = 245
         VentanaFinalizarRecepcion(self,ancho,alto,"Finalizar Carga")
 
@@ -705,7 +709,7 @@ class VentanaTapas(Widgets.VentanaHija):
         Widgets.VentanaHija.__init__(self,ventanaMadre,ancho,alto,titulo)
 
         #Texto
-        Label(self.contenedor, text = "Cantidad de tapas:",font=(Widgets.FUENTE_PRINCIPAL, 15),bg='white').grid(row=1,column=0,pady=37,padx=10,sticky=E)
+        Label(self.contenedor, text = "Cantidad de tapas:",font=(Widgets.FUENTE_PRINCIPAL, 15),bg='white').grid(row=1,column=0,pady=28,padx=15,sticky=E)
 
         #Entrada de Texto
         self.entradaTapas = Entry(self.contenedor, font=(Widgets.FUENTE_PRINCIPAL,15), width=15,highlightthickness=2)
@@ -713,10 +717,10 @@ class VentanaTapas(Widgets.VentanaHija):
         self.entradaTapas.grid(row=1,column=1,sticky=W)
         
         #Botones
-        botonCancelar = Widgets.botonSecundario(self.contenedor,'Cancelar',self.ventana.destroy)
-        botonCancelar.grid(row=2,column=0,sticky=EW,padx=5)
-        botonFinalizar =  Widgets.botonPrincipal(self.contenedor,'Cargar Tapas',lambda: self.cargarTapas(self))
-        botonFinalizar.grid(row=2,column=1,sticky=EW,padx=5)
+        botonCancelar = Widgets.botonSecundario(self.frameInferior,'Cancelar',self.ventana.destroy)
+        botonCancelar.pack(side=LEFT, anchor=SW,pady=10,padx=(10,0))
+        botonFinalizar =  Widgets.botonPrincipal(self.frameInferior,'Cargar Tapas',lambda: self.cargarTapas(self))
+        botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
         
         self.ventana.bind('<Return>', lambda event: self.cargarTapas(self))
 
@@ -735,8 +739,6 @@ class VentanaFarmabox(Widgets.VentanaHija):
         altoFrameSuperior = alto - ventanaMadre.altoFrameInferior - self.altoLinea
         frameSuperior = Frame(self.contenedor ,height=altoFrameSuperior,width=ancho, background=Widgets.COLOR_FONDO)
         frameSuperior.pack(fill=BOTH, expand=True)
-        self.frameInferior = Frame(self.contenedor ,height=ventanaMadre.altoFrameInferior,width=ancho,background=Widgets.COLOR_FONDO)
-        self.frameInferior.pack(fill=BOTH)
 
         #---Frame Superior---
         # Creo Canvas dentro de Frame
@@ -764,9 +766,9 @@ class VentanaFarmabox(Widgets.VentanaHija):
 
         #Botones
         botonCancelar = Widgets.botonSecundario(self.frameInferior,'Cancelar',lambda: self.ventana.destroy())
-        botonCancelar.grid(row=0,column=0,sticky='sew',padx=5,pady=10)
+        botonCancelar.pack(side=LEFT, anchor=SW,pady=10,padx=(10,0))
         botonFinalizar =  Widgets.botonPrincipal(self.frameInferior,'Agregar Farmabox', lambda: self.finalizarCarga())
-        botonFinalizar.grid(row=0,column=1,sticky='sew',padx=5,pady=10)
+        botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
 
     def agregarLineaCargaManualFB(self):
         
@@ -808,11 +810,12 @@ class VentanaCancelaRecepcion(Widgets.VentanaHija):
         
         #Texto
         Label(self.contenedor, text='¿ Está seguro que quiere cancelar esta recepción ?',font=(Widgets.FUENTE_PRINCIPAL, 12),bg=Widgets.COLOR_FONDO,anchor=CENTER).grid(row=0,column=0,columnspan=2,pady=40,padx=10,sticky=EW)
+        
         #Botones
-        botonVolver = Widgets.botonSecundario(self.contenedor,'Seguir Recepcionando',self.ventana.destroy)
-        botonVolver.grid(row=1,column=0,sticky='sew',padx=(10,5),pady=10)
-        botonCancelar =  Widgets.botonPrincipal(self.contenedor,'Cancelar Recepción',self.cancelar)
-        botonCancelar.grid(row=1,column=1,sticky='sew',padx=(5,10),pady=10)
+        botonVolver = Widgets.botonSecundario(self.frameInferior,'Seguir Recepcionando',self.ventana.destroy)
+        botonVolver.pack(side=LEFT, anchor=SW,pady=10,padx=(10,0))
+        botonCancelar =  Widgets.botonPrincipal(self.frameInferior,'Cancelar Recepción',self.cancelar)
+        botonCancelar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
 
     def cancelar(self):
         self.ventanaMadre.pantallaInicial()
@@ -839,10 +842,10 @@ class VentanaFinalizarRecepcion(Widgets.VentanaHija):
         Label(self.contenedor, text=self.ventanaMadre.recepcion.tapas,font=(Widgets.FUENTE_PRINCIPAL, 12),bg='white').grid(row=5,column=1,sticky=W,padx=10)
 
         #Botones
-        botonCancelar = Widgets.botonSecundario(self.contenedor,'Seguir Recepcionando',self.ventana.destroy)
-        botonCancelar.grid(row=6,column=0,sticky=EW,pady=(25,0),padx=5)
-        botonFinalizar = Widgets.botonPrincipal(self.contenedor,'Generar Recepción',self.finalizarCargaRecepcion)
-        botonFinalizar.grid(row=6,column=1,sticky=EW,pady=(25,0),padx=5)
+        botonCancelar = Widgets.botonSecundario(self.frameInferior,'Seguir Recepcionando',self.ventana.destroy)
+        botonCancelar.pack(side=LEFT, anchor=SW,pady=10,padx=(10,0))
+        botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Generar Recepción',self.finalizarCargaRecepcion)
+        botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
         
     def finalizarCargaRecepcion(self):
         BaseDatos.generarRecepcion(self.ventanaMadre.recepcion)
@@ -851,15 +854,185 @@ class VentanaFinalizarRecepcion(Widgets.VentanaHija):
         self.ventana.destroy()
 
 class VentanaRecepciones(Widgets.VentanaHija):
-    def __init__(self,ventanaMadre,fechaD,fechaH,radio,transp,empresa):
-        ancho = 800
-        alto = 212
+    def __init__(self,ventanaMadre,ancho,alto,titulo,fechaD,fechaH,radio,transp,empresa):
 
-        self.ventana = Toplevel(ventanaMadre)
-        self.ventana.title("Elija una Fecha")
-        self.ventana.geometry(str(ancho)+"x"+str(alto))
-        recepciones = BaseDatos.buscarRecepciones(fechaD,fechaH,radio,transp,empresa)
+        Widgets.VentanaHija.__init__(self,ventanaMadre,ancho,alto,titulo)
+        
+        codRadio = radio[1][radio[0]][0]
+        radioImprimible = "TODOS LOS RADIOS"
+        if codRadio != '00':
+            radioImprimible = codRadio
 
+        transporteObjetivo = transp[1][transp[0]]
+        nroTransp = transporteObjetivo[0]
+        nomTransp = transporteObjetivo[1]
+        nroTranspImrimible = ''
+        if nroTransp != 0:
+            nroTranspImrimible = " ("+str(nroTransp)+")"
+
+        empresaObjetivo = empresa[1][empresa[0]]
+        nroEmpresa = empresaObjetivo[0]
+        nomEmpresa = empresaObjetivo[1]
+        nroEmpresaImrimible = ''
+        if nroEmpresa != 0:
+            nroEmpresaImrimible = " ("+str(nroEmpresa)+")"
+
+        
+        recepciones = BaseDatos.buscarRecepciones(fechaD,fechaH,codRadio,nroTransp,nroEmpresa)
+
+        #---Frame TOP---
+        altoTop = 64
+        frameTop = Frame(self.contenedor,bg=Widgets.COLOR_FONDO,height=altoTop) 
+        frameTop.pack(side = TOP, fill = X, expand = TRUE, padx=Widgets.MARGEN_X)
+        frameTop.propagate(False)
+        frameTopDerecho = Frame(frameTop,bg=Widgets.COLOR_FONDO,height=altoTop,width=(ancho/2)-Widgets.MARGEN_X)
+        frameTopDerecho.pack(side = LEFT, fill = BOTH, expand = TRUE)
+        frameTopIzquierdo = Frame(frameTop,bg=Widgets.COLOR_FONDO,height=altoTop,width=(ancho/2)-Widgets.MARGEN_X)
+        frameTopIzquierdo.pack(side = RIGHT, fill = BOTH, expand = TRUE)
+
+        Label(frameTopDerecho, text="Radio : "+radioImprimible,font=(Widgets.FUENTE_PRINCIPAL, 9),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+        Label(frameTopDerecho, text="Transportista : "+nomTransp+nroTranspImrimible,font=(Widgets.FUENTE_PRINCIPAL, 9),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+        Label(frameTopDerecho, text="Empresa : "+nomEmpresa+nroEmpresaImrimible,font=(Widgets.FUENTE_PRINCIPAL, 9),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+
+        Label(frameTopIzquierdo, text="Fecha Desde :  "+str(fechaD),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+        Label(frameTopIzquierdo, text="Fecha Hasta :  "+str(fechaH),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+
+
+        #---Frame Tabla---
+        frameTabla = Frame(self.contenedor,bg=Widgets.COLOR_FONDO,height=self.altoContenedor-altoTop) 
+        frameTabla.pack(side = BOTTOM, fill = BOTH, expand = TRUE, padx=Widgets.MARGEN_X)
+        frameTabla.propagate(False)
+
+        estilo = Style()
+        estilo.theme_use('clam')
+        estilo.configure('Treeview.Heading', background=Widgets.COLOR_NARANJA_SUAVE,relief="groove",justify=CENTER)
+
+        tabla = Treeview(frameTabla, column=("#1", "#2", "#3","#4","#5","#6","#7","#8"), show='headings',height=23,selectmode=BROWSE)
+        tabla.pack(side=LEFT)
+
+        tabla.column("#1", anchor=CENTER, width=78)
+        tabla.heading("#1", text="Recepción")
+        tabla.column("#2", anchor=CENTER, width=140)
+        tabla.heading("#2", text="Fecha")
+        tabla.column("#3", anchor=CENTER, width=70)
+        tabla.heading("#3", text="Radio")
+        tabla.column("#4", anchor=CENTER, width=185)
+        tabla.heading("#4", text="Transportista")
+        tabla.column("#5", anchor=CENTER, width=185)
+        tabla.heading("#5", text="Empresa")
+        tabla.column("#6", anchor=CENTER, width=60)
+        tabla.heading("#6", text="Fbox")
+        tabla.column("#7", anchor=CENTER, width=60)
+        tabla.heading("#7", text="Tapas")
+        tabla.column("#8", anchor=CENTER, width=60)
+        tabla.heading("#8", text="Proces.")
+
+        scrollbar = Scrollbar(frameTabla, orient=VERTICAL)
+        scrollbar.pack(side=RIGHT, fill=Y)
+
+        tabla.config(yscrollcommand=scrollbar.set)
+        scrollbar.config(command=tabla.yview)
+
+        for row in recepciones:
+            tabla.insert("", END, values=row)     
+
+        #Botones
+        botonCSV = Widgets.botonPrincipal(self.frameInferior,'Generar CSV',self.ventana.destroy)
+        botonCSV.pack(side=LEFT, anchor=SW,pady=10,padx=(10,0))
+        botonExcel = Widgets.botonPrincipal(self.frameInferior,'Generar Excel',self.ventana.destroy)
+        botonExcel.pack(side=LEFT, anchor=CENTER,pady=10,padx=5)
+        botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Cerrar',self.ventana.destroy)
+        botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
+
+class VentanaDetalleRecepcion(Widgets.VentanaHija):
+    def __init__(self,ventanaMadre,ancho,alto,titulo,nroRecepcion):
+
+        Widgets.VentanaHija.__init__(self,ventanaMadre,ancho,alto,titulo)
+        
+        recepciones = BaseDatos.buscarRecepcion(nroRecepcion)
+
+        if recepciones is None:
+            codRadio = ''
+            nomTransportista = ''
+            nomEmpresa = ''
+            fecha = ''
+            procesado = ''
+            textoProcesado = ''
+
+        else:
+            codRadio = recepciones[0][2]
+            nomTransportista = recepciones[0][3]
+            nomEmpresa = recepciones[0][4]
+            fecha = recepciones[0][1]
+            procesado = recepciones[0][8]
+            textoProcesado = "No"
+
+            if procesado==0:
+                textoProcesado = "Si"
+
+
+        altoTop = 64
+        altoTotales = 30
+
+        #---Frame TOP---
+        frameTop = Frame(self.contenedor,bg=Widgets.COLOR_FONDO,height=altoTop) 
+        frameTop.pack(side = TOP, fill = X, expand = TRUE, padx=Widgets.MARGEN_X)
+        frameTop.propagate(False)
+        frameTopDerecho = Frame(frameTop,bg=Widgets.COLOR_FONDO,height=altoTop,width=(ancho/2)-Widgets.MARGEN_X)
+        frameTopDerecho.pack(side = LEFT, fill = BOTH, expand = TRUE)
+        frameTopIzquierdo = Frame(frameTop,bg=Widgets.COLOR_FONDO,height=altoTop,width=(ancho/2)-Widgets.MARGEN_X)
+        frameTopIzquierdo.pack(side = RIGHT, fill = BOTH, expand = TRUE)
+
+        Label(frameTopDerecho, text="Racepción : "+str(nroRecepcion),font=(Widgets.FUENTE_PRINCIPAL, 9),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+        Label(frameTopDerecho, text="Radio : "+codRadio,font=(Widgets.FUENTE_PRINCIPAL, 9),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+        Label(frameTopDerecho, text="Transportista : "+nomTransportista+" - "+nomEmpresa,font=(Widgets.FUENTE_PRINCIPAL, 9),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+
+        Label(frameTopIzquierdo, text="Fecha :  "+str(fecha),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+        Label(frameTopIzquierdo, text="Fecha Hasta :  "+textoProcesado,background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+
+
+        #---Frame Tabla---
+        frameTabla = Frame(self.contenedor,bg=Widgets.COLOR_FONDO,height=self.altoContenedor-altoTop-altoTotales) 
+        frameTabla.pack(side = TOP, fill = BOTH, expand = TRUE, padx=Widgets.MARGEN_X)
+        frameTabla.propagate(False)
+
+        estilo = Style()
+        estilo.theme_use('clam')
+        estilo.configure('Treeview.Heading', background=Widgets.COLOR_NARANJA_SUAVE,relief="groove",justify=CENTER)
+
+        tabla = Treeview(frameTabla, column=("#1"), show='headings',height=20,selectmode=BROWSE)
+        tabla.pack(side=LEFT)
+
+        tabla.column("#1", anchor=CENTER, width=200)
+        tabla.heading("#1", text="Número de Farmabox")
+
+        scrollbar = Scrollbar(frameTabla, orient=VERTICAL)
+        scrollbar.pack(side=RIGHT, fill=Y)
+
+        tabla.config(yscrollcommand=scrollbar.set)
+        scrollbar.config(command=tabla.yview)
+
+        if recepciones is not None:
+            for row in recepciones:
+                tabla.insert("", END, values=row[7])     
+
+        #---Frame Totales---
+        frameTotales = Frame(self.contenedor,bg=Widgets.COLOR_FONDO,height=altoTotales) 
+        frameTotales.pack(side = BOTTOM, fill = BOTH, expand = TRUE, padx=Widgets.MARGEN_X)
+        frameTotales.propagate(False)
+
+        #Textos
+        Label(frameTotales, text="Total Chicos: ",font=(Widgets.FUENTE_PRINCIPAL, 12),bg=Widgets.COLOR_FONDO).grid(row=0,column=0,sticky=E,pady=5)
+        Label(frameTotales, text="Total Grandes: ",font=(Widgets.FUENTE_PRINCIPAL, 12),bg=Widgets.COLOR_FONDO).grid(row=0,column=2,sticky=E,pady=5)
+        Label(frameTotales, text="Tapas: ",font=(Widgets.FUENTE_PRINCIPAL, 12),bg=Widgets.COLOR_FONDO).grid(row=0,column=3,sticky=E,pady=5)
+
+        #Botones
+        botonCSV = Widgets.botonPrincipal(self.frameInferior,'Generar CSV',self.ventana.destroy)
+        botonCSV.pack(side=LEFT, anchor=SW,pady=10,padx=(10,0))
+        botonExcel = Widgets.botonPrincipal(self.frameInferior,'Generar Excel',self.ventana.destroy)
+        botonExcel.pack(side=LEFT, anchor=CENTER,pady=10,padx=5)
+        botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Cerrar',self.ventana.destroy)
+        botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
 
 class VentanaCalendario(Widgets.VentanaHija):
     def __init__(self,ventanaMadre,fechaEntry):
@@ -891,23 +1064,4 @@ class VentanaCalendario(Widgets.VentanaHija):
             self.fechaEntry.delete(0,END)
             self.fechaEntry.insert(0,fecha)
             self.ventana.destroy()
-
-
-
-""" class PantallaRecepciones():
-    def __init__(self,ventana):
-        ventana.pantalla = 3
-
-        #Limpio pantalla de widgets anteriores
-        ventana.limpiarFrame()
-        
-        #-------------FRAME SUPERIOR------------
-        #Titulo
-        ventana.encabezado.set("Buscar Recepciones")
-
-
-        #-------------FRAME INFERIORR------------
-        #Boton Finalizar
-        botonFinalizar = Widgets.botonPrincipal(ventana.frameInferior,'Finalizar',ventana.pantallaInicial)         
-        botonFinalizar.pack(anchor=SE) """
     

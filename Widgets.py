@@ -81,11 +81,22 @@ class VentanaHija():
         self.ventana.configure(bg=COLOR_FONDO)
         rutaIcono = Recursos.rutaArchivo('Imagenes/Pantuflas.ico')
         self.ventana.iconbitmap(rutaIcono)
-        self.altoLinea = 1
-        frameLinea = Frame(self.ventana,height=self.altoLinea,width=ancho, background=COLOR_FONDO)
-        frameLinea.pack(fill='both')
-        self.contenedor = Frame(self.ventana,height=alto-self.altoLinea,width=ancho, background=COLOR_FONDO)
-        self.contenedor.pack(fill='both', expand=True)
+
+        altoLinea = 1
+        self.altoContenedor = alto-altoLinea-ventanaMadre.altoFrameInferior
+
+
+        frameLinea = Frame(self.ventana,height=altoLinea,width=ancho, background=COLOR_FONDO)
+        frameLinea.pack(fill='both',side=TOP)
+
+        self.contenedor = Frame(self.ventana,height=self.altoContenedor,width=ancho, background=COLOR_FONDO)
+        self.contenedor.pack(fill=BOTH, expand=True,side=TOP)
+        self.contenedor.propagate(False)
+        
+        self.frameInferior = Frame(self.ventana,height=ventanaMadre.altoFrameInferior,width=ancho, background=COLOR_FONDO)
+        self.frameInferior.pack(fill=BOTH, expand=True,side=BOTTOM)
+        self.frameInferior.propagate(False)
+
         linea(frameLinea,ancho,0,1)
 
 class Seccion(Frame):
