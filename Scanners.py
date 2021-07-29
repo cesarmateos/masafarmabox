@@ -2,6 +2,7 @@ import serial
 from threading import Thread
 from threading import Semaphore
 from time import sleep
+from tkinter import messagebox
 
 import Recursos
 
@@ -37,9 +38,12 @@ class LectorPuerto():
         self.hilo.start()
 
     def hiloLector(self):
-        self.puerto = serial.Serial(self.com,self.baudrate)
-        self.abrirPuerto()
-        self.escuchar() 
+        try:
+            self.puerto = serial.Serial(self.com,self.baudrate)
+            self.abrirPuerto()
+            self.escuchar() 
+        except:
+            messagebox.showinfo(message="No hay Scanner en el puerto "+str(self.com), title="Scanner no encontrado")
 
     def terminarHilo(self):
         if self.puerto != None:

@@ -174,8 +174,9 @@ def buscarRecepciones(fechaDesde,fechaHasta,radio,transporte,empresa):
         'JOIN TRANSPORTISTA ON TRANSPORTISTA.NroTransportista = RECEPCION.NroTransportista '
         'JOIN EMPRESA ON EMPRESA.CodEmpresa = TRANSPORTISTA.CodEmpresa '
         'JOIN FB_X_RECEPCION ON FB_X_RECEPCION.NroRecepcion = RECEPCION.NroRecepcion ')
-    parte2 = parte2 = parte3 = parte4 = parte5 = parte6 = parte7 = parte8 = ''
 
+    parte2 = parte2 = parte3 = parte4 = parte5 = parte6 = parte7 = parte8 = ''
+    parte9 = 'GROUP BY RECEPCION.NroRecepcion '
     
     if fechaDesde == '' and fechaHasta =='':
         pass
@@ -239,17 +240,14 @@ def buscarRecepciones(fechaDesde,fechaHasta,radio,transporte,empresa):
         argumentosLista.append(empresa)
 
    
-    querySQL =  parte1 + parte2 + parte3 + parte4 + parte5 + parte6 + parte7+ parte8
+    querySQL =  parte1 + parte2 + parte3 + parte4 + parte5 + parte6 + parte7+ parte8 +parte9
 
     argumentos = tuple(argumentosLista)
     cursor.execute(querySQL,(argumentos))
 
     recepciones = list(cursor.fetchall())
     cursor.close
-
-    for fila in recepciones:
-        print(fila)
-
+    
     return recepciones
 
 def buscarRecepcion(nroRecepcion):
@@ -265,7 +263,7 @@ def buscarRecepcion(nroRecepcion):
             'JOIN FB_X_RECEPCION ON FB_X_RECEPCION.NroRecepcion = RECEPCION.NroRecepcion '
             'WHERE FB_X_RECEPCION.NroRecepcion=?')
 
-        cursor.execute(querySQL,(nroRecepcion))
+        cursor.execute(querySQL,(nroRecepcion,))
         recepcion = list(cursor.fetchall())
         cursor.close
         return recepcion

@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import messagebox
+from tkinter import filedialog
 from tkinter.ttk import Combobox
 from tkinter.ttk import Treeview
 from tkinter.ttk import Style
@@ -10,6 +11,7 @@ import Recepcion
 import Widgets
 import os
 import sys
+import pandas as Pandas
 
 
 class Ventana(Tk):
@@ -327,7 +329,7 @@ class Ventana(Tk):
         Label(seccionRecepciones.contenido, text="Recepción Nro",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=6,column=0,sticky=E,pady=(20,margenY),padx=(0,4))
         detalleRecepcion = Entry(seccionRecepciones.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=18,highlightthickness=2)
         detalleRecepcion.grid(row=6,column=1,sticky=W,pady=(20,margenY))
-        botonBuscarRecepcionB = Widgets.botonMicro(seccionRecepciones.contenido,"Buscar",lambda: VentanaDetalleRecepcion(self,self.anchoVentana,600,"Detalle de Recepción",detalleRecepcion.get()))
+        botonBuscarRecepcionB = Widgets.botonMicro(seccionRecepciones.contenido,"Buscar",lambda: self.buscarRecepcion(detalleRecepcion.get()))
         botonBuscarRecepcionB.grid(row=6,column=2,sticky=E,pady=(20,margenY))   
         
 
@@ -701,8 +703,15 @@ class Ventana(Tk):
     def reiniciar(self):
         os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
 
-    def buscarRecepciones(self):
-        pass
+    def buscarRecepcion(self,nroRecepcion):
+        if nroRecepcion == '':
+            messagebox.showinfo(message="Debe completar el campo \" Recepción Nro \"", title="Campo Nulo")
+        else:
+            recepcion = BaseDatos.buscarRecepcion(nroRecepcion)
+            if recepcion == []:
+                messagebox.showinfo(message="Recepción "+nroRecepcion+" no encontrada.", title="Recepción inexistente")
+            else:
+                VentanaDetalleRecepcion(self,self.anchoVentana,600,"Detalle de Recepción",recepcion)
 
 class VentanaTapas(Widgets.VentanaHija):
     def __init__(self,ventanaMadre,ancho,alto,titulo):
@@ -735,21 +744,16 @@ class VentanaFarmabox(Widgets.VentanaHija):
         
         self.listaFarmabox = []
 
-        #Creo Frames
-        altoFrameSuperior = alto - ventanaMadre.altoFrameInferior - self.altoLinea
-        frameSuperior = Frame(self.contenedor ,height=altoFrameSuperior,width=ancho, background=Widgets.COLOR_FONDO)
-        frameSuperior.pack(fill=BOTH, expand=True)
-
-        #---Frame Superior---
+         #---Frame Superior---
         # Creo Canvas dentro de Frame
-        canvas = Canvas(frameSuperior, bg=Widgets.COLOR_FONDO,borderwidth=0,highlightthickness=0,width=ancho-50,height=altoFrameSuperior)
+        canvas = Canvas(self.contenedor, bg=Widgets.COLOR_FONDO,borderwidth=0,highlightthickness=0,width=ancho-50,height=self.altoContenedor)
         canvas.pack(side=LEFT,fill=Y,expand=TRUE)
 
         #Creo Frame dentro de Canvas
         self.frameScroll = Frame(canvas,background=Widgets.COLOR_FONDO)
 
         #Armo Scroll y Linkeo
-        scroll = Scrollbar(frameSuperior,orient=VERTICAL, command=canvas.yview)
+        scroll = Scrollbar(self.contenedor,orient=VERTICAL, command=canvas.yview)
         scroll.pack(side=RIGHT,fill=Y)
         canvas.configure(yscrollcommand=scroll.set)
         canvas.create_window((1,1), window=self.frameScroll, anchor=NW, tags="self.frameScroll")
@@ -894,8 +898,8 @@ class VentanaRecepciones(Widgets.VentanaHija):
         Label(frameTopDerecho, text="Transportista : "+nomTransp+nroTranspImrimible,font=(Widgets.FUENTE_PRINCIPAL, 9),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
         Label(frameTopDerecho, text="Empresa : "+nomEmpresa+nroEmpresaImrimible,font=(Widgets.FUENTE_PRINCIPAL, 9),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
 
-        Label(frameTopIzquierdo, text="Fecha Desde :  "+str(fechaD),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
-        Label(frameTopIzquierdo, text="Fecha Hasta :  "+str(fechaH),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+        Label(frameTopIzquierdo, text="Fecha Desde :  "+str(fechaD)[0:19],background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+        Label(frameTopIzquierdo, text="Fecha Hasta :  "+str(fechaH)[0:19],background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
 
 
         #---Frame Tabla---
@@ -907,68 +911,72 @@ class VentanaRecepciones(Widgets.VentanaHija):
         estilo.theme_use('clam')
         estilo.configure('Treeview.Heading', background=Widgets.COLOR_NARANJA_SUAVE,relief="groove",justify=CENTER)
 
-        tabla = Treeview(frameTabla, column=("#1", "#2", "#3","#4","#5","#6","#7","#8"), show='headings',height=23,selectmode=BROWSE)
-        tabla.pack(side=LEFT)
+        self.tabla = Treeview(frameTabla, column=("#1", "#2", "#3","#4","#5","#6","#7","#8"), show='headings',height=23,selectmode=BROWSE)
+        self.tabla.pack(side=LEFT)
 
-        tabla.column("#1", anchor=CENTER, width=78)
-        tabla.heading("#1", text="Recepción")
-        tabla.column("#2", anchor=CENTER, width=140)
-        tabla.heading("#2", text="Fecha")
-        tabla.column("#3", anchor=CENTER, width=70)
-        tabla.heading("#3", text="Radio")
-        tabla.column("#4", anchor=CENTER, width=185)
-        tabla.heading("#4", text="Transportista")
-        tabla.column("#5", anchor=CENTER, width=185)
-        tabla.heading("#5", text="Empresa")
-        tabla.column("#6", anchor=CENTER, width=60)
-        tabla.heading("#6", text="Fbox")
-        tabla.column("#7", anchor=CENTER, width=60)
-        tabla.heading("#7", text="Tapas")
-        tabla.column("#8", anchor=CENTER, width=60)
-        tabla.heading("#8", text="Proces.")
+        self.tabla.bind("<Double-1>", self.OnDoubleClick)
+
+        self.tabla.column("#1", anchor=CENTER, width=78)
+        self.tabla.heading("#1", text="Recepción")
+        self.tabla.column("#2", anchor=CENTER, width=140)
+        self.tabla.heading("#2", text="Fecha")
+        self.tabla.column("#3", anchor=CENTER, width=70)
+        self.tabla.heading("#3", text="Radio")
+        self.tabla.column("#4", anchor=CENTER, width=185)
+        self.tabla.heading("#4", text="Transportista")
+        self.tabla.column("#5", anchor=CENTER, width=185)
+        self.tabla.heading("#5", text="Empresa")
+        self.tabla.column("#6", anchor=CENTER, width=60)
+        self.tabla.heading("#6", text="Fbox")
+        self.tabla.column("#7", anchor=CENTER, width=60)
+        self.tabla.heading("#7", text="Tapas")
+        self.tabla.column("#8", anchor=CENTER, width=60)
+        self.tabla.heading("#8", text="Proces.")
 
         scrollbar = Scrollbar(frameTabla, orient=VERTICAL)
         scrollbar.pack(side=RIGHT, fill=Y)
 
-        tabla.config(yscrollcommand=scrollbar.set)
-        scrollbar.config(command=tabla.yview)
+        self.tabla.config(yscrollcommand=scrollbar.set)
+        scrollbar.config(command=self.tabla.yview)
 
         for row in recepciones:
-            tabla.insert("", END, values=row)     
+            self.tabla.insert("", END, values=row)     
 
         #Botones
-        botonCSV = Widgets.botonPrincipal(self.frameInferior,'Generar CSV',self.ventana.destroy)
+        botonCSV = Widgets.botonPrincipal(self.frameInferior,'Generar CSV',lambda :self.guardarCSV(recepciones))
         botonCSV.pack(side=LEFT, anchor=SW,pady=10,padx=(10,0))
         botonExcel = Widgets.botonPrincipal(self.frameInferior,'Generar Excel',self.ventana.destroy)
         botonExcel.pack(side=LEFT, anchor=CENTER,pady=10,padx=5)
         botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Cerrar',self.ventana.destroy)
         botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
 
+    def guardarCSV(self,recepciones):
+        archivo = filedialog.asksaveasfile(mode ='w',title='Exportar a CSV',filetypes= [("Arhcivo CSV","*.csv")], defaultextension='.csv')
+        titulos = ['Número Recepción','Fecha','Radio','Transportista','Empresa','Cantidad Farmabox','Cantidad Tapas','Procesado']
+        datos = Pandas.DataFrame(recepciones,columns=titulos)
+        datos.to_csv(archivo,index=False,encoding='utf-8',sep=';')
+    
+    def OnDoubleClick(self, event):
+        item = self.tabla.selection()[0]
+        nroRecepcion =  self.tabla.item(item,"values")[0]
+        self.ventanaMadre.buscarRecepcion(nroRecepcion)
+        
 class VentanaDetalleRecepcion(Widgets.VentanaHija):
-    def __init__(self,ventanaMadre,ancho,alto,titulo,nroRecepcion):
+    def __init__(self,ventanaMadre,ancho,alto,titulo,recepcion):
 
         Widgets.VentanaHija.__init__(self,ventanaMadre,ancho,alto,titulo)
-        
-        recepciones = BaseDatos.buscarRecepcion(nroRecepcion)
+         
+        nroRecepcion = recepcion[0][0]
+        codRadio = recepcion[0][2]
+        nomTransportista = recepcion[0][3]
+        nomEmpresa = recepcion[0][4]
+        fecha = recepcion[0][1]
+        tapas = recepcion[0][6]
+        procesado = recepcion[0][7]
+        textoProcesado = "No"
 
-        if recepciones is None:
-            codRadio = ''
-            nomTransportista = ''
-            nomEmpresa = ''
-            fecha = ''
-            procesado = ''
-            textoProcesado = ''
-
-        else:
-            codRadio = recepciones[0][2]
-            nomTransportista = recepciones[0][3]
-            nomEmpresa = recepciones[0][4]
-            fecha = recepciones[0][1]
-            procesado = recepciones[0][8]
-            textoProcesado = "No"
-
-            if procesado==0:
-                textoProcesado = "Si"
+        if procesado==0:
+            textoProcesado = "Si"
 
 
         altoTop = 64
@@ -987,8 +995,8 @@ class VentanaDetalleRecepcion(Widgets.VentanaHija):
         Label(frameTopDerecho, text="Radio : "+codRadio,font=(Widgets.FUENTE_PRINCIPAL, 9),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
         Label(frameTopDerecho, text="Transportista : "+nomTransportista+" - "+nomEmpresa,font=(Widgets.FUENTE_PRINCIPAL, 9),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
 
-        Label(frameTopIzquierdo, text="Fecha :  "+str(fecha),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
-        Label(frameTopIzquierdo, text="Fecha Hasta :  "+textoProcesado,background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+        Label(frameTopIzquierdo, text="Fecha :  "+str(fecha)[0:19],background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+        Label(frameTopIzquierdo, text="Procesado :  "+textoProcesado,background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
 
 
         #---Frame Tabla---
@@ -1000,39 +1008,59 @@ class VentanaDetalleRecepcion(Widgets.VentanaHija):
         estilo.theme_use('clam')
         estilo.configure('Treeview.Heading', background=Widgets.COLOR_NARANJA_SUAVE,relief="groove",justify=CENTER)
 
-        tabla = Treeview(frameTabla, column=("#1"), show='headings',height=20,selectmode=BROWSE)
+        tabla = Treeview(frameTabla, column=("#1","#2"), show='headings',height=20,selectmode=BROWSE)
         tabla.pack(side=LEFT)
 
         tabla.column("#1", anchor=CENTER, width=200)
         tabla.heading("#1", text="Número de Farmabox")
+        tabla.column("#2", anchor=CENTER, width=200)
+        tabla.heading("#2", text="Tamaño Farmabox")
 
         scrollbar = Scrollbar(frameTabla, orient=VERTICAL)
         scrollbar.pack(side=RIGHT, fill=Y)
 
         tabla.config(yscrollcommand=scrollbar.set)
         scrollbar.config(command=tabla.yview)
+        cantidadCH = 0
+        cantidadGR = 0
 
-        if recepciones is not None:
-            for row in recepciones:
-                tabla.insert("", END, values=row[7])     
+        recepcionConTamanio = []
 
-        #---Frame Totales---
+        if recepcion is not None:
+            for row in recepcion:
+                nueva = list(row)
+                if Recursos.esCubetaChica(row[5]):
+                    nueva.append("Chico")
+                    cantidadCH += 1
+                else:
+                    nueva.append("Grande")
+                    cantidadGR +=1
+                recepcionConTamanio.append(nueva)
+                tabla.insert("",END, values=(nueva[5],nueva[8]) )  
+
+            #---Frame Totales---
         frameTotales = Frame(self.contenedor,bg=Widgets.COLOR_FONDO,height=altoTotales) 
         frameTotales.pack(side = BOTTOM, fill = BOTH, expand = TRUE, padx=Widgets.MARGEN_X)
         frameTotales.propagate(False)
 
         #Textos
-        Label(frameTotales, text="Total Chicos: ",font=(Widgets.FUENTE_PRINCIPAL, 12),bg=Widgets.COLOR_FONDO).grid(row=0,column=0,sticky=E,pady=5)
-        Label(frameTotales, text="Total Grandes: ",font=(Widgets.FUENTE_PRINCIPAL, 12),bg=Widgets.COLOR_FONDO).grid(row=0,column=2,sticky=E,pady=5)
-        Label(frameTotales, text="Tapas: ",font=(Widgets.FUENTE_PRINCIPAL, 12),bg=Widgets.COLOR_FONDO).grid(row=0,column=3,sticky=E,pady=5)
+        Label(frameTotales, text="Total Chicos: "+str(cantidadCH),font=(Widgets.FUENTE_PRINCIPAL, 12),bg=Widgets.COLOR_FONDO).grid(row=0,column=0,sticky=E,pady=5)
+        Label(frameTotales, text="Total Grandes: "+str(cantidadGR),font=(Widgets.FUENTE_PRINCIPAL, 12),bg=Widgets.COLOR_FONDO).grid(row=0,column=2,sticky=E,pady=5)
+        Label(frameTotales, text="Tapas: "+str(tapas),font=(Widgets.FUENTE_PRINCIPAL, 12),bg=Widgets.COLOR_FONDO).grid(row=0,column=3,sticky=E,pady=5)
 
         #Botones
-        botonCSV = Widgets.botonPrincipal(self.frameInferior,'Generar CSV',self.ventana.destroy)
+        botonCSV = Widgets.botonPrincipal(self.frameInferior,'Generar CSV',lambda: self.guardarCSV(recepcionConTamanio))
         botonCSV.pack(side=LEFT, anchor=SW,pady=10,padx=(10,0))
         botonExcel = Widgets.botonPrincipal(self.frameInferior,'Generar Excel',self.ventana.destroy)
         botonExcel.pack(side=LEFT, anchor=CENTER,pady=10,padx=5)
         botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Cerrar',self.ventana.destroy)
         botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
+
+    def guardarCSV(self,recepcion):
+        archivo = filedialog.asksaveasfile(mode ='w',title='Exportar a CSV',filetypes= [("Arhcivo CSV","*.csv")], defaultextension='.csv')
+        titulos = ['Número Recepción','Fecha','Radio','Transportista','Empresa','Número Farmabox','Cantidad Tapas','Procesado', 'Tamaño Farmabox']
+        datos = Pandas.DataFrame(recepcion,columns=titulos)
+        datos.to_csv(archivo,index=False,encoding='utf-8',sep=';')
 
 class VentanaCalendario(Widgets.VentanaHija):
     def __init__(self,ventanaMadre,fechaEntry):
