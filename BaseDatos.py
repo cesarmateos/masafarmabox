@@ -175,7 +175,7 @@ def buscarRecepciones(fechaDesde,fechaHasta,radio,transporte,empresa):
         'JOIN EMPRESA ON EMPRESA.CodEmpresa = TRANSPORTISTA.CodEmpresa '
         'JOIN FB_X_RECEPCION ON FB_X_RECEPCION.NroRecepcion = RECEPCION.NroRecepcion ')
 
-    parte2 = parte2 = parte3 = parte4 = parte5 = parte6 = parte7 = parte8 = ''
+    parte2 = parte3 = parte4 = parte5 = parte6 = parte7 = parte8 = ''
     parte9 = 'GROUP BY RECEPCION.NroRecepcion '
     
     if fechaDesde == '' and fechaHasta =='':
@@ -268,6 +268,217 @@ def buscarRecepcion(nroRecepcion):
         cursor.close
         return recepcion
     return None
+
+def buscarKardexFarmabox(nroFarmabox,fechaDesde,fechaHasta):
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+
+    argumentosLista = [nroFarmabox]
+    parte2 = parte4 =''
+
+    
+    parte1 = ('SELECT NroFarmabox, FechaModificacion AS Fecha, TIPOS_MODIFICACION.TipoModificacion AS TipoMovimiento, "-" AS Nro_Recepcion,MODIFICACION.NroModificacion, "-" AS CodRadio '
+            'FROM MODIFICACION '
+            'JOIN FB_X_MODIFICACION ON FB_X_MODIFICACION.NroModificacion = MODIFICACION.NroModificacion '
+            'JOIN TIPOS_MODIFICACION ON TIPOS_MODIFICACION.CodTipoModificacion = MODIFICACION.CodTipoModificacion '
+            'WHERE FB_X_MODIFICACION.NroFarmabox = ?')
+    parte3 = ('UNION '
+            'SELECT NroFarmabox, FechaRecepcion AS Fecha, "RECEPCIÓN" AS TipoMovimiento, RECEPCION.NroRecepcion, "-" AS NroModificacion, CodRadio '
+            'FROM RECEPCION '
+            'JOIN FB_X_RECEPCION ON FB_X_RECEPCION.NroRecepcion = RECEPCION.NroRecepcion '
+            'WHERE FB_X_RECEPCION.NroFarmabox = ? ')
+    parte5 ='ORDER BY 2'
+
+    if fechaDesde == '' and fechaHasta =='':
+        argumentosLista.append(nroFarmabox) 
+    else:
+        parte2 = 'AND FechaModificacion BETWEEN ? AND ? '
+        parte4 = 'AND FechaRecepcion BETWEEN ? AND ? '
+        fechaDesdeFormateada = None
+        fechaHastaFormateada = None
+        if fechaDesde != '' and fechaHasta !='':
+            desde = fechaDesde + ' 00:00:00'
+            fechaDesdeFormateada = datetime.strptime(desde, "%d/%m/%y %H:%M:%S")
+            hasta = fechaHasta +' 23:59:59'
+            fechaHastaFormateada = datetime.strptime(hasta, "%d/%m/%y %H:%M:%S")
+        elif fechaDesde != '' and fechaHasta =='':
+            desde = fechaDesde + ' 00:00:00'
+            fechaDesdeFormateada = datetime.strptime(desde, "%d/%m/%y %H:%M:%S")
+            fechaHastaFormateada = datetime.now()
+
+        else:
+            hasta = fechaHasta +' 23:59:59'
+            fechaDesdeFormateada = datetime.strptime('2021/07/22 15:44:23', "%Y/%m/%d %H:%M:%S")
+            fechaHastaFormateada = datetime.strptime(hasta, "%d/%m/%y %H:%M:%S")
+
+        argumentosLista.append(fechaDesdeFormateada)
+        argumentosLista.append(fechaHastaFormateada)
+        argumentosLista.append(nroFarmabox) 
+        argumentosLista.append(fechaDesdeFormateada)
+        argumentosLista.append(fechaHastaFormateada)   
+
+    querySQL = parte1+parte2+parte3+parte4+parte5
+
+    argumentos = tuple(argumentosLista)
+    cursor.execute(querySQL,(argumentos))
+
+    kardex = list(cursor.fetchall())
+    tuplaBusqueda = (kardex,fechaDesde,fechaHasta)
+    cursor.close
+
+    return tuplaBusqueda
+
+def buscarModificaciones(fechaDesde,fechaHasta,tipo):
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+    argumentosLista = []
+    primero = True
+
+    
+    parte1 = ('SELECT NroModificacion, TipoModificacion, FechaModificacion '
+                'FROM MODIFICACION '
+                'JOIN TIPOS_MODIFICACION ON TIPOS_MODIFICACION.CodTipoModificacion = MODIFICACION.CodTipoModificacion ')
+
+    parte2 = parte3 = parte4 = ''
+    
+    if fechaDesde == '' and fechaHasta =='':
+        pass
+    else:
+        primero = False
+        parte2 = 'WHERE FechaModificacion BETWEEN ? AND ? '
+        fechaDesdeFormateada = None
+        fechaHastaFormateada = None
+        if fechaDesde != '' and fechaHasta !='':
+            desde = fechaDesde + ' 00:00:00'
+            fechaDesdeFormateada = datetime.strptime(desde, "%d/%m/%y %H:%M:%S")
+            hasta = fechaHasta +' 23:59:59'
+            fechaHastaFormateada = datetime.strptime(hasta, "%d/%m/%y %H:%M:%S")
+        elif fechaDesde != '' and fechaHasta =='':
+            desde = fechaDesde + ' 00:00:00'
+            fechaDesdeFormateada = datetime.strptime(desde, "%d/%m/%y %H:%M:%S")
+            fechaHastaFormateada = datetime.now()
+
+        else:
+            hasta = fechaHasta +' 23:59:59'
+            fechaDesdeFormateada = datetime.strptime('2021/07/22 15:44:23', "%Y/%m/%d %H:%M:%S")
+            fechaHastaFormateada = datetime.strptime(hasta, "%d/%m/%y %H:%M:%S")
+
+        argumentosLista.append(fechaDesdeFormateada)
+        argumentosLista.append(fechaHastaFormateada)   
+
+
+    if tipo == 0:
+        pass
+    else:
+        if primero:
+            parte3 ='WHERE '
+            primero = False 
+        else:
+            parte3 ='AND '
+        parte4 = 'TIPOS_MODIFICACION.CodTipoModificacion=? '
+        argumentosLista.append(tipo)
+
+
+   
+    querySQL =  parte1 + parte2 + parte3 + parte4
+
+    argumentos = tuple(argumentosLista)
+    cursor.execute(querySQL,(argumentos))
+
+    modificaciones = list(cursor.fetchall())
+    cursor.close
+    
+    return modificaciones
+
+def buscarModificacion(nroModificacion):
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+
+    if nroModificacion != '':
+        querySQL = ('SELECT MODIFICACION.NroModificacion, FechaModificacion,TipoModificacion,NroFarmabox '
+                    'FROM MODIFICACION '
+                    'JOIN TIPOS_MODIFICACION ON TIPOS_MODIFICACION.CodTipoModificacion = MODIFICACION.CodTipoModificacion '
+                    'JOIN FB_X_MODIFICACION ON FB_X_MODIFICACION.NroModificacion = MODIFICACION.NroModificacion '
+                    'WHERE MODIFICACION.NroModificacion=?')
+
+        cursor.execute(querySQL,(nroModificacion,))
+        modificacion = list(cursor.fetchall())
+        cursor.close
+        return modificacion
+    return None
+
+def buscarRechazos(fechaDesde,fechaHasta,motivo,nroRecepcion):
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+    
+    argumentosLista = []
+    primero = True
+
+    parte1 = ('SELECT RECEPCION.FechaRecepcion, RECEPCION.NroRecepcion, Lectura1, Lectura2, MotivoRechazo '
+                'FROM RECHAZOS_X_RECEPCION '
+                'JOIN RECEPCION ON RECEPCION.NroRecepcion = RECHAZOS_X_RECEPCION.NroRecepcion '
+                'JOIN MOTIVO_RECHAZO ON MOTIVO_RECHAZO.CodRechazo = RECHAZOS_X_RECEPCION.CodMotivoRechazo ')
+
+    parte2 = parte3 = parte4 = parte5 = parte6 =  ''
+    
+    if fechaDesde == '' and fechaHasta =='':
+        pass
+    else:
+        primero = False
+        parte2 = 'WHERE FechaRecepcion BETWEEN ? AND ? '
+        fechaDesdeFormateada = None
+        fechaHastaFormateada = None
+        if fechaDesde != '' and fechaHasta !='':
+            desde = fechaDesde + ' 00:00:00'
+            fechaDesdeFormateada = datetime.strptime(desde, "%d/%m/%y %H:%M:%S")
+            hasta = fechaHasta +' 23:59:59'
+            fechaHastaFormateada = datetime.strptime(hasta, "%d/%m/%y %H:%M:%S")
+        elif fechaDesde != '' and fechaHasta =='':
+            desde = fechaDesde + ' 00:00:00'
+            fechaDesdeFormateada = datetime.strptime(desde, "%d/%m/%y %H:%M:%S")
+            fechaHastaFormateada = datetime.now()
+
+        else:
+            hasta = fechaHasta +' 23:59:59'
+            fechaDesdeFormateada = datetime.strptime('2021/07/22 15:44:23', "%Y/%m/%d %H:%M:%S")
+            fechaHastaFormateada = datetime.strptime(hasta, "%d/%m/%y %H:%M:%S")
+
+        argumentosLista.append(fechaDesdeFormateada)
+        argumentosLista.append(fechaHastaFormateada)   
+
+
+    if motivo == 0:
+        pass
+    else:
+        if primero:
+            parte3 ='WHERE '
+            primero = False 
+        else:
+            parte3 ='AND '
+        parte4 = 'MOTIVO_RECHAZO.CodRechazo=? '
+        argumentosLista.append(motivo)
+
+    if nroRecepcion == '':
+        pass
+    else:
+        if primero:
+            parte5 ='WHERE '
+            primero = False 
+        else:
+            parte5 ='AND '
+        parte6 = 'RECEPCION.NroRecepcion=? '
+        argumentosLista.append(nroRecepcion)
+
+
+    querySQL =  parte1 + parte2 + parte3 + parte4  + parte5 + parte6
+
+    argumentos = tuple(argumentosLista)
+    cursor.execute(querySQL,(argumentos))
+
+    rechazos = list(cursor.fetchall())
+    cursor.close
+    
+    return rechazos
 
 def cargarFarmaboxDesdeCSV(archivo,tipo:int):
     

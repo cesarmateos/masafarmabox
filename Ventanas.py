@@ -11,6 +11,7 @@ import Recepcion
 import Widgets
 import os
 import sys
+import csv
 import pandas as Pandas
 
 
@@ -79,6 +80,7 @@ class Ventana(Tk):
         self.frameInferior.propagate(False)
 
         #Lanzo la pantalla principal
+        self.cargarEstilo()
         self.pantallaInicial()
 
         #Declaro la variable en la que se guarda el dato del segundo escaner
@@ -250,7 +252,6 @@ class Ventana(Tk):
         botonFinalizar.grid(row=3,column=6,columnspan=2,sticky=E)
      
     def pantallaConsultas(self):
-        self.pantalla = 3
 
         #Limpio pantalla de widgets anteriores
         self.limpiarFrame()
@@ -327,9 +328,10 @@ class Ventana(Tk):
         
         #Detalle Recepción
         Label(seccionRecepciones.contenido, text="Recepción Nro",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=6,column=0,sticky=E,pady=(20,margenY),padx=(0,4))
-        detalleRecepcion = Entry(seccionRecepciones.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=18,highlightthickness=2)
-        detalleRecepcion.grid(row=6,column=1,sticky=W,pady=(20,margenY))
-        botonBuscarRecepcionB = Widgets.botonMicro(seccionRecepciones.contenido,"Buscar",lambda: self.buscarRecepcion(detalleRecepcion.get()))
+        self.detalleRecepcion = Entry(seccionRecepciones.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=18,highlightthickness=2)
+        self.detalleRecepcion.grid(row=6,column=1,sticky=W,pady=(20,margenY))
+        self.commandBuscarRecepcion = lambda event: self.buscarRecepcion(self.detalleRecepcion.get())
+        botonBuscarRecepcionB = Widgets.botonMicro(seccionRecepciones.contenido,"Buscar",lambda: self.buscarRecepcion(self.detalleRecepcion.get()))
         botonBuscarRecepcionB.grid(row=6,column=2,sticky=E,pady=(20,margenY))   
         
 
@@ -354,12 +356,13 @@ class Ventana(Tk):
 
         #Número Farmabox
         Label(seccionFarmabox.contenido, text="Nro Farmabox",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=2,column=0,sticky=E,pady=margenY,padx=(20,4))
-        nroFarmabox = Entry(seccionFarmabox.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=10,highlightthickness=2)
-        nroFarmabox.grid(row=2,column=1,sticky=E,pady=margenY)
+        self.nroFarmabox = Entry(seccionFarmabox.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=23,highlightthickness=2)
+        self.nroFarmabox.grid(row=2,column=1,columnspan=2,sticky=E,pady=margenY)
 
         #Buscar Farmabox
-        botonBuscarFarmabox = Widgets.botonMicro(seccionFarmabox.contenido,"Buscar",lambda: self.BaseDatos.buscarRecepciones())
-        botonBuscarFarmabox.grid(row=3,column=3,sticky=E,pady=(margenY,0),padx=0)  
+        self.commandBuscarFarmabox = lambda event: self.buscarFarmabox(self.nroFarmabox.get(),fechaDesdeFarma.get(),fechaHastaFarma.get())
+        botonBuscarFarmabox = Widgets.botonMicro(seccionFarmabox.contenido,"Buscar",lambda: self.buscarFarmabox(self.nroFarmabox.get(),fechaDesdeFarma.get(),fechaHastaFarma.get() ))
+        botonBuscarFarmabox.grid(row=3,column=2,columnspan=3,sticky=E,pady=(margenY,0),padx=0)  
 
 
         
@@ -385,15 +388,20 @@ class Ventana(Tk):
         #Motivo
         Label(seccionRechazados.contenido, text="Motivo",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=2,column=0,sticky=E,pady=margenY,padx=(5,4))
         motivosRechazo = BaseDatos.obtenerMotivosRechazo()
+        motivosRechazo.append((0,"TODOS LOS MOTIVOS"))
         valoresMotivoRechazo = [valores[1] for valores in motivosRechazo]
-        valoresMotivoRechazo.append("TODOS")
-        lista = Combobox(seccionRechazados.contenido,values=valoresMotivoRechazo,state='readonly',width=40)
-        lista.current(len(valoresMotivoRechazo)-1)
-        lista.grid(row=2,column=1,columnspan=3,sticky=W,pady=margenY)
+        listaRechazados = Combobox(seccionRechazados.contenido,values=valoresMotivoRechazo,state='readonly',width=40)
+        listaRechazados.current(len(valoresMotivoRechazo)-1)
+        listaRechazados.grid(row=2,column=1,columnspan=3,sticky=W,pady=margenY)
+
+        Label(seccionRechazados.contenido, text="Recepción Nro",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=3,column=0,sticky=E,pady=margenY,padx=(5,4))
+        self.nroRecepcionRechazados = Entry(seccionRechazados.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=18,highlightthickness=2)
+        self.nroRecepcionRechazados.grid(row=3,column=1,columnspan=3,sticky=W,pady=margenY)
+        self.commandBuscarRechazados = None #VER
 
         #Buscar
-        botonBuscarRechazo = Widgets.botonMicro(seccionRechazados.contenido,"Buscar",lambda: self.BaseDatos.buscarRecepciones())
-        botonBuscarRechazo.grid(row=3,column=3,columnspan=3,sticky=E,pady=(margenY,0))  
+        botonBuscarRechazo = Widgets.botonMicro(seccionRechazados.contenido,"Buscar",lambda: VentanRechazados(self,780,600,"Consulta Rechazox",fechaRechazDesde.get(),fechaRechazHasta.get(),(listaRechazados.current(),motivosRechazo),self.nroRecepcionRechazados.get()))
+        botonBuscarRechazo.grid(row=4,column=3,columnspan=3,sticky=E,pady=(margenY,0))  
 
         
         #--Seccion Movimientos--
@@ -415,23 +423,24 @@ class Ventana(Tk):
         botonPickFechaHastaMod = Widgets.botonMicro(seccionMovimientos.contenido,"Elegir",lambda: VentanaCalendario(self,fechaModHasta))
         botonPickFechaHastaMod.grid(row=1,column=2,sticky=E,pady=margenY,padx=(10,0))
         
-        Label(seccionMovimientos.contenido, text="Modificación",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=2,column=0,sticky=E,pady=margenY,padx=(0,4))
+        Label(seccionMovimientos.contenido, text="Tipo Modif.",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=2,column=0,sticky=E,pady=margenY,padx=(0,4))
         tiposModificacion = BaseDatos.obtenerTiposModificacion()
+        tiposModificacion.append((0,"TODOS LOS MOTIVOS"))
         valoresTipoMod = [valores[1] for valores in tiposModificacion]
-        valoresTipoMod.append("TODOS")
-        lista = Combobox(seccionMovimientos.contenido,values=valoresTipoMod,state='readonly',width=40)
-        lista.current(len(valoresTipoMod)-1)
-        lista.grid(row=2,column=1,sticky=W,columnspan=3,pady=margenY)
+        listaMod = Combobox(seccionMovimientos.contenido,values=valoresTipoMod,state='readonly',width=40)
+        listaMod.current(len(valoresTipoMod)-1)
+        listaMod.grid(row=2,column=1,sticky=W,columnspan=3,pady=margenY)
 
-        botonBuscarMovA = Widgets.botonMicro(seccionMovimientos.contenido,"Buscar",lambda: self.BaseDatos.buscarRecepciones())
-        botonBuscarMovA.grid(row=3,column=3,sticky=E,pady=(margenY,0))   
+        botonBuscarMovA = Widgets.botonMicro(seccionMovimientos.contenido,"Buscar",lambda: VentanaModificaciones(self,self.anchoVentana,500,"Consulta Modificaciones",fechaModDesde.get(),fechaModHasta.get(),(listaMod.current(),tiposModificacion)))
+        botonBuscarMovA.grid(row=3,column=2,columnspan=2,sticky=E,pady=(margenY,0))   
 
         
-        Label(seccionMovimientos.contenido, text="Modificación Nro",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=4,column=0,sticky=E,pady=(20,0),padx=(0,4))
-        detalleMovimiento = Entry(seccionMovimientos.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=18,highlightthickness=2)
-        detalleMovimiento.grid(row=4,column=1,columnspan=3,sticky=W,pady=(20,0))
-        botonBuscarMovB = Widgets.botonMicro(seccionMovimientos.contenido,"Buscar",lambda: self.BaseDatos.buscarRecepciones())
-        botonBuscarMovB.grid(row=4,column=3,sticky=E,pady=(20,0)) 
+        Label(seccionMovimientos.contenido, text="Modificación Nro",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=4,column=0,sticky=E,pady=(20,0),padx=(20,4))
+        self.detalleModificacion = Entry(seccionMovimientos.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=18,highlightthickness=2)
+        self.detalleModificacion.grid(row=4,column=1,columnspan=3,sticky=W,pady=(20,0))
+        self.commandBuscarModificacion = lambda event: self.buscarModificacion(self.detalleModificacion.get())
+        botonBuscarMovB = Widgets.botonMicro(seccionMovimientos.contenido,"Buscar",lambda: self.buscarModificacion(self.detalleModificacion.get()))
+        botonBuscarMovB.grid(row=4,column=2,columnspan=2,sticky=E,pady=(20,0),padx=(10,0) )
         
 
 
@@ -439,6 +448,22 @@ class Ventana(Tk):
         #Boton Finalizar
         botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Volver',self.pantallaInicial)         
         botonFinalizar.pack(anchor=SE)
+
+
+        #Bindings del Enter
+        self.bind_all("<Button-1>", lambda event: self.bindearEnter(event))
+
+    def bindearEnter(self,event):
+        try:
+            widget = self.focus_get()
+            if widget == self.nroFarmabox:
+                self.bind('<Return>', self.commandBuscarFarmabox)
+            elif widget == self.detalleRecepcion:
+                self.bind('<Return>', self.commandBuscarRecepcion)
+            elif widget == self.detalleModificacion:
+                self.bind('<Return>', self.commandBuscarModificacion)
+        except:
+            pass
 
     def pantallaConfiguracion(self):
         self.pantalla = 4
@@ -711,7 +736,36 @@ class Ventana(Tk):
             if recepcion == []:
                 messagebox.showinfo(message="Recepción "+nroRecepcion+" no encontrada.", title="Recepción inexistente")
             else:
-                VentanaDetalleRecepcion(self,self.anchoVentana,600,"Detalle de Recepción",recepcion)
+                VentanaDetalleRecepcion(self,650,600,"Detalle de Recepción",recepcion)
+
+    def buscarFarmabox(self,nroFarmabox,fechaD,fechaH):
+        if nroFarmabox == '':
+            messagebox.showinfo(message="Debe completar el campo \" Nro. Farmabox \"", title="Campo Nulo")
+        else:
+            recepcion = BaseDatos.buscarKardexFarmabox(nroFarmabox,fechaD,fechaH)
+            if recepcion[0] == []:
+                messagebox.showinfo(message="Farmabox "+nroFarmabox+" no encontrado.", title="Farmabox inexistente")
+            else:
+                VentanaKardexFarmabox(self,700,600,"Kardex Farmabox",recepcion)
+
+    def buscarModificacion(self,nroModificacion):
+        if nroModificacion == '':
+            messagebox.showinfo(message="Debe completar el campo \" Modificación Nro \"", title="Campo Nulo")
+        else:
+            modificacion = BaseDatos.buscarModificacion(nroModificacion)
+            if modificacion == []:
+                messagebox.showinfo(message="Recepción "+nroModificacion+" no encontrada.", title="Recepción inexistente")
+            else:
+                VentanaDetallesModificacion(self,650,600,"Detalle de Modificación de Farmabox",modificacion)
+
+    def cargarEstilo(self):
+        estilo = Style()
+        estilo.theme_use('clam')
+        estilo.configure('Treeview.Heading', background=Widgets.COLOR_NARANJA_SUAVE,relief="groove",justify=CENTER)
+        estilo.configure("TCombobox",background =Widgets.COLOR_FONDO)
+        estilo.map('TCombobox', fieldbackground=[('readonly','white')])
+        estilo.map('TCombobox', selectbackground=[('readonly', 'white')])
+        estilo.map('TCombobox', selectforeground=[('readonly', 'black')])  
 
 class VentanaTapas(Widgets.VentanaHija):
     def __init__(self,ventanaMadre,ancho,alto,titulo):
@@ -907,13 +961,10 @@ class VentanaRecepciones(Widgets.VentanaHija):
         frameTabla.pack(side = BOTTOM, fill = BOTH, expand = TRUE, padx=Widgets.MARGEN_X)
         frameTabla.propagate(False)
 
-        estilo = Style()
-        estilo.theme_use('clam')
-        estilo.configure('Treeview.Heading', background=Widgets.COLOR_NARANJA_SUAVE,relief="groove",justify=CENTER)
-
-        self.tabla = Treeview(frameTabla, column=("#1", "#2", "#3","#4","#5","#6","#7","#8"), show='headings',height=23,selectmode=BROWSE)
+        self.tabla = Treeview(frameTabla, column=("#1", "#2", "#3","#4","#5","#6","#7","#8"), show='headings',height=21,selectmode=BROWSE)
         self.tabla.pack(side=LEFT)
 
+        #Bindeo doble click a función
         self.tabla.bind("<Double-1>", self.OnDoubleClick)
 
         self.tabla.column("#1", anchor=CENTER, width=78)
@@ -940,27 +991,29 @@ class VentanaRecepciones(Widgets.VentanaHija):
         scrollbar.config(command=self.tabla.yview)
 
         for row in recepciones:
-            self.tabla.insert("", END, values=row)     
+            self.tabla.insert("", END, values=(row[0],row[1][0:19],row[2],row[3],row[4],row[5],row[6],row[7])     )
 
         #Botones
         botonCSV = Widgets.botonPrincipal(self.frameInferior,'Generar CSV',lambda :self.guardarCSV(recepciones))
         botonCSV.pack(side=LEFT, anchor=SW,pady=10,padx=(10,0))
-        botonExcel = Widgets.botonPrincipal(self.frameInferior,'Generar Excel',self.ventana.destroy)
-        botonExcel.pack(side=LEFT, anchor=CENTER,pady=10,padx=5)
+        #botonExcel = Widgets.botonPrincipal(self.frameInferior,'Generar Excel',lambda :self.guardarExcel(recepciones))
+        #botonExcel.pack(side=LEFT, anchor=CENTER,pady=10,padx=5)
         botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Cerrar',self.ventana.destroy)
         botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
 
     def guardarCSV(self,recepciones):
         archivo = filedialog.asksaveasfile(mode ='w',title='Exportar a CSV',filetypes= [("Arhcivo CSV","*.csv")], defaultextension='.csv')
         titulos = ['Número Recepción','Fecha','Radio','Transportista','Empresa','Cantidad Farmabox','Cantidad Tapas','Procesado']
-        datos = Pandas.DataFrame(recepciones,columns=titulos)
-        datos.to_csv(archivo,index=False,encoding='utf-8',sep=';')
-    
+        with open(archivo.name, 'w+', newline ='',) as archivo:    
+            escritor = csv.writer(archivo,delimiter = ";")
+            escritor.writerow(titulos)
+            escritor.writerows(recepciones)
+            
     def OnDoubleClick(self, event):
         item = self.tabla.selection()[0]
         nroRecepcion =  self.tabla.item(item,"values")[0]
         self.ventanaMadre.buscarRecepcion(nroRecepcion)
-        
+         
 class VentanaDetalleRecepcion(Widgets.VentanaHija):
     def __init__(self,ventanaMadre,ancho,alto,titulo,recepcion):
 
@@ -1008,19 +1061,21 @@ class VentanaDetalleRecepcion(Widgets.VentanaHija):
         estilo.theme_use('clam')
         estilo.configure('Treeview.Heading', background=Widgets.COLOR_NARANJA_SUAVE,relief="groove",justify=CENTER)
 
-        tabla = Treeview(frameTabla, column=("#1","#2"), show='headings',height=20,selectmode=BROWSE)
-        tabla.pack(side=LEFT)
+        self.tabla = Treeview(frameTabla, column=("#1","#2"), show='headings',height=21,selectmode=BROWSE)
+        self.tabla.pack(side=LEFT)
 
-        tabla.column("#1", anchor=CENTER, width=200)
-        tabla.heading("#1", text="Número de Farmabox")
-        tabla.column("#2", anchor=CENTER, width=200)
-        tabla.heading("#2", text="Tamaño Farmabox")
+        self.tabla.bind("<Double-1>", self.OnDoubleClick)
+
+        self.tabla.column("#1", anchor=CENTER, width=300)
+        self.tabla.heading("#1", text="Número de Farmabox")
+        self.tabla.column("#2", anchor=CENTER, width=290)
+        self.tabla.heading("#2", text="Tamaño Farmabox")
 
         scrollbar = Scrollbar(frameTabla, orient=VERTICAL)
         scrollbar.pack(side=RIGHT, fill=Y)
 
-        tabla.config(yscrollcommand=scrollbar.set)
-        scrollbar.config(command=tabla.yview)
+        self.tabla.config(yscrollcommand=scrollbar.set)
+        scrollbar.config(command=self.tabla.yview)
         cantidadCH = 0
         cantidadGR = 0
 
@@ -1036,31 +1091,38 @@ class VentanaDetalleRecepcion(Widgets.VentanaHija):
                     nueva.append("Grande")
                     cantidadGR +=1
                 recepcionConTamanio.append(nueva)
-                tabla.insert("",END, values=(nueva[5],nueva[8]) )  
+                self.tabla.insert("",END, values=(nueva[5],nueva[8]) )  
 
-            #---Frame Totales---
+        #---Frame Totales---
         frameTotales = Frame(self.contenedor,bg=Widgets.COLOR_FONDO,height=altoTotales) 
         frameTotales.pack(side = BOTTOM, fill = BOTH, expand = TRUE, padx=Widgets.MARGEN_X)
         frameTotales.propagate(False)
 
         #Textos
-        Label(frameTotales, text="Total Chicos: "+str(cantidadCH),font=(Widgets.FUENTE_PRINCIPAL, 12),bg=Widgets.COLOR_FONDO).grid(row=0,column=0,sticky=E,pady=5)
-        Label(frameTotales, text="Total Grandes: "+str(cantidadGR),font=(Widgets.FUENTE_PRINCIPAL, 12),bg=Widgets.COLOR_FONDO).grid(row=0,column=2,sticky=E,pady=5)
-        Label(frameTotales, text="Tapas: "+str(tapas),font=(Widgets.FUENTE_PRINCIPAL, 12),bg=Widgets.COLOR_FONDO).grid(row=0,column=3,sticky=E,pady=5)
+        Label(frameTotales, text="Total Chicos: "+str(cantidadCH),font=(Widgets.FUENTE_PRINCIPAL, 12),bg=Widgets.COLOR_FONDO).grid(row=0,column=0,sticky=EW,pady=5, padx=(0,30))
+        Label(frameTotales, text="Total Grandes: "+str(cantidadGR),font=(Widgets.FUENTE_PRINCIPAL, 12),bg=Widgets.COLOR_FONDO).grid(row=0,column=1,sticky=EW,pady=5,padx=30)
+        Label(frameTotales, text="Tapas: "+str(tapas),font=(Widgets.FUENTE_PRINCIPAL, 12),bg=Widgets.COLOR_FONDO).grid(row=0,column=2,sticky=EW,pady=5,padx=30)
 
         #Botones
         botonCSV = Widgets.botonPrincipal(self.frameInferior,'Generar CSV',lambda: self.guardarCSV(recepcionConTamanio))
         botonCSV.pack(side=LEFT, anchor=SW,pady=10,padx=(10,0))
-        botonExcel = Widgets.botonPrincipal(self.frameInferior,'Generar Excel',self.ventana.destroy)
-        botonExcel.pack(side=LEFT, anchor=CENTER,pady=10,padx=5)
+        #botonExcel = Widgets.botonPrincipal(self.frameInferior,'Generar Excel',self.ventana.destroy)
+        #botonExcel.pack(side=LEFT, anchor=CENTER,pady=10,padx=5)
         botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Cerrar',self.ventana.destroy)
         botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
 
     def guardarCSV(self,recepcion):
         archivo = filedialog.asksaveasfile(mode ='w',title='Exportar a CSV',filetypes= [("Arhcivo CSV","*.csv")], defaultextension='.csv')
         titulos = ['Número Recepción','Fecha','Radio','Transportista','Empresa','Número Farmabox','Cantidad Tapas','Procesado', 'Tamaño Farmabox']
-        datos = Pandas.DataFrame(recepcion,columns=titulos)
-        datos.to_csv(archivo,index=False,encoding='utf-8',sep=';')
+        with open(archivo.name, 'w+', newline ='',) as archivo:    
+            escritor = csv.writer(archivo,delimiter = ";")
+            escritor.writerow(titulos)
+            escritor.writerows(recepcion)
+    
+    def OnDoubleClick(self, event):
+        item = self.tabla.selection()[0]
+        nroFarmabox =  self.tabla.item(item,"values")[0]
+        self.ventanaMadre.buscarFarmabox(nroFarmabox,'','')
 
 class VentanaCalendario(Widgets.VentanaHija):
     def __init__(self,ventanaMadre,fechaEntry):
@@ -1093,3 +1155,297 @@ class VentanaCalendario(Widgets.VentanaHija):
             self.fechaEntry.insert(0,fecha)
             self.ventana.destroy()
     
+class VentanaKardexFarmabox(Widgets.VentanaHija):
+    def __init__(self,ventanaMadre,ancho,alto,titulo,tuplaBusquedaMovimientos):
+
+        Widgets.VentanaHija.__init__(self,ventanaMadre,ancho,alto,titulo)
+
+        movimientos = tuplaBusquedaMovimientos[0]
+        fechaD = tuplaBusquedaMovimientos[1]
+        fechaH = tuplaBusquedaMovimientos[2]
+        nroFarmabox = movimientos[0][0]
+
+        #---Frame TOP---
+        altoTop = 50
+        frameTop = Frame(self.contenedor,bg=Widgets.COLOR_FONDO,height=altoTop) 
+        frameTop.pack(side = TOP, fill = X, expand = TRUE, padx=Widgets.MARGEN_X)
+        frameTop.propagate(False)
+
+        frameTopDerecho = Frame(frameTop,bg=Widgets.COLOR_FONDO,height=altoTop,width=(ancho/2)-Widgets.MARGEN_X)
+        frameTopDerecho.pack(side = LEFT, fill = BOTH, expand = TRUE)
+        frameTopIzquierdo = Frame(frameTop,bg=Widgets.COLOR_FONDO,height=altoTop,width=(ancho/2)-Widgets.MARGEN_X)
+        frameTopIzquierdo.pack(side = RIGHT, fill = BOTH, expand = TRUE)
+
+        Label(frameTopDerecho, text="Farmabox Número : "+str(nroFarmabox),font=(Widgets.FUENTE_PRINCIPAL, 15),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+
+        Label(frameTopIzquierdo, text="Fecha Desde :  "+str(fechaD)[0:19],background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+        Label(frameTopIzquierdo, text="Fecha Hasta :  "+str(fechaH)[0:19],background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+
+
+        #---Frame Tabla---
+        frameTabla = Frame(self.contenedor,bg=Widgets.COLOR_FONDO,height=self.altoContenedor-altoTop) 
+        frameTabla.pack(side = BOTTOM, fill = BOTH, expand = TRUE, padx=Widgets.MARGEN_X)
+        frameTabla.propagate(False)
+
+        estilo = Style()
+        estilo.theme_use('clam')
+        estilo.configure('Treeview.Heading', background=Widgets.COLOR_NARANJA_SUAVE,relief="groove",justify=CENTER)
+
+        self.tabla = Treeview(frameTabla, column=("#1", "#2", "#3","#4","#5"), show='headings',height=21,selectmode=BROWSE)
+        self.tabla.pack(side=LEFT)
+
+        self.tabla.bind("<Double-1>", self.OnDoubleClick)
+
+        self.tabla.column("#1", anchor=CENTER, width=140)
+        self.tabla.heading("#1", text="Fecha")
+        self.tabla.column("#2", anchor=CENTER, width=140)
+        self.tabla.heading("#2", text="Tipo Movimiento")
+        self.tabla.column("#3", anchor=CENTER, width=140)
+        self.tabla.heading("#3", text="Número Recepción")
+        self.tabla.column("#4", anchor=CENTER, width=140)
+        self.tabla.heading("#4", text="Número Modificación")
+        self.tabla.column("#5", anchor=CENTER, width=80)
+        self.tabla.heading("#5", text="Radio")
+
+        scrollbar = Scrollbar(frameTabla, orient=VERTICAL)
+        scrollbar.pack(side=RIGHT, fill=Y)
+
+        self.tabla.config(yscrollcommand=scrollbar.set)
+        scrollbar.config(command=self.tabla.yview)
+    
+        for row in movimientos:
+            self.tabla.insert("", END, values=(row[1][0:19],row[2],row[3],row[4],row[5]) )
+
+        #Botones
+        botonCSV = Widgets.botonPrincipal(self.frameInferior,'Generar CSV',lambda: self.guardarCSV(movimientos))
+        botonCSV.pack(side=LEFT, anchor=SW,pady=10,padx=(10,0))
+        #botonExcel = Widgets.botonPrincipal(self.frameInferior,'Generar Excel',self.ventana.destroy)
+        #botonExcel.pack(side=LEFT, anchor=CENTER,pady=10,padx=5)
+        botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Cerrar',self.ventana.destroy)
+        botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
+         
+    def guardarCSV(self,movimientos):
+        archivo = filedialog.asksaveasfile(mode ='w',title='Exportar a CSV',filetypes= [("Arhcivo CSV","*.csv")], defaultextension='.csv')
+        titulos = ['Número Farmabox','Fecha','Tipo Movimiento','Número Recepción','Número Modificación','Radio']
+        with open(archivo.name, 'w+', newline ='',) as archivo:    
+            escritor = csv.writer(archivo,delimiter = ";")
+            escritor.writerow(titulos)
+            escritor.writerows(movimientos)
+
+    def OnDoubleClick(self, event):
+        item = self.tabla.selection()[0]
+        tipoMovimiento = self.tabla.item(item,"values")[1]
+        if tipoMovimiento == "RECEPCIÓN":
+            self.ventanaMadre.buscarRecepcion(self.tabla.item(item,"values")[2])
+        else:
+            self.ventanaMadre.buscarModificacion(self.tabla.item(item,"values")[3])
+
+class VentanaModificaciones(Widgets.VentanaHija):
+    def __init__(self,ventanaMadre,ancho,alto,titulo,fechaD,fechaH,tuplaTipos):
+
+        Widgets.VentanaHija.__init__(self,ventanaMadre,ancho,alto,titulo)
+
+        lineaSeleccionada = tuplaTipos[1][tuplaTipos[0]]
+        motivoCod = lineaSeleccionada[0]
+        motivoTipo = lineaSeleccionada[1]
+    
+        modificaciones = BaseDatos.buscarModificaciones(fechaD,fechaH,motivoCod)
+
+
+        #---Frame TOP---
+        altoTop = 64
+        frameTop = Frame(self.contenedor,bg=Widgets.COLOR_FONDO,height=altoTop) 
+        frameTop.pack(side = TOP, fill = X, expand = TRUE, padx=Widgets.MARGEN_X)
+        frameTop.propagate(False)
+        frameTopDerecho = Frame(frameTop,bg=Widgets.COLOR_FONDO,height=altoTop,width=(ancho/2)-Widgets.MARGEN_X)
+        frameTopDerecho.pack(side = LEFT, fill = BOTH, expand = TRUE)
+        frameTopIzquierdo = Frame(frameTop,bg=Widgets.COLOR_FONDO,height=altoTop,width=(ancho/2)-Widgets.MARGEN_X)
+        frameTopIzquierdo.pack(side = RIGHT, fill = BOTH, expand = TRUE)
+
+        Label(frameTopDerecho, text="Motivo : "+motivoTipo,font=(Widgets.FUENTE_PRINCIPAL, 9),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+
+        Label(frameTopIzquierdo, text="Fecha Desde :  "+str(fechaD)[0:19],background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+        Label(frameTopIzquierdo, text="Fecha Hasta :  "+str(fechaH)[0:19],background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+
+
+        #---Frame Tabla---
+        frameTabla = Frame(self.contenedor,bg=Widgets.COLOR_FONDO,height=self.altoContenedor-altoTop) 
+        frameTabla.pack(side = BOTTOM, fill = BOTH, expand = TRUE, padx=Widgets.MARGEN_X)
+        frameTabla.propagate(False)
+
+        self.tabla = Treeview(frameTabla, column=("#1", "#2", "#3"), show='headings',height=21,selectmode=BROWSE)
+        self.tabla.pack(side=LEFT)
+
+        self.tabla.column("#1", anchor=CENTER, width=100)
+        self.tabla.heading("#1", text="Número Modificación")
+        self.tabla.column("#2", anchor=CENTER, width=140)
+        self.tabla.heading("#2", text="Tipo Modificación")
+        self.tabla.column("#3", anchor=CENTER, width=200)
+        self.tabla.heading("#3", text="Fecha")
+
+        scrollbar = Scrollbar(frameTabla, orient=VERTICAL)
+        scrollbar.pack(side=RIGHT, fill=Y)
+
+        self.tabla.config(yscrollcommand=scrollbar.set)
+        scrollbar.config(command=self.tabla.yview)
+
+        for row in modificaciones:
+            self.tabla.insert("", END, values=(row[0],row[1],row[2][0:19])  )
+
+        #Botones
+        botonCSV = Widgets.botonPrincipal(self.frameInferior,'Generar CSV',lambda :self.guardarCSV(modificaciones))
+        botonCSV.pack(side=LEFT, anchor=SW,pady=10,padx=(10,0))
+        botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Cerrar',self.ventana.destroy)
+        botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
+
+class VentanRechazados(Widgets.VentanaHija):
+    def __init__(self,ventanaMadre,ancho,alto,titulo,fechaD,fechaH,tuplaMotivo,nroRecepcion):
+
+        Widgets.VentanaHija.__init__(self,ventanaMadre,ancho,alto,titulo)
+
+        lineaSeleccionada = tuplaMotivo[1][tuplaMotivo[0]]
+        motivoCod = lineaSeleccionada[0]
+        motivoTipo = lineaSeleccionada[1]
+
+
+        rechazos = BaseDatos.buscarRechazos(fechaD,fechaH,motivoCod,nroRecepcion)
+
+        #---Frame TOP---
+        altoTop = 64
+        frameTop = Frame(self.contenedor,bg=Widgets.COLOR_FONDO,height=altoTop) 
+        frameTop.pack(side = TOP, fill = X, expand = TRUE, padx=Widgets.MARGEN_X)
+        frameTop.propagate(False)
+        frameTopDerecho = Frame(frameTop,bg=Widgets.COLOR_FONDO,height=altoTop,width=(ancho/2)-Widgets.MARGEN_X)
+        frameTopDerecho.pack(side = LEFT, fill = BOTH, expand = TRUE)
+        frameTopIzquierdo = Frame(frameTop,bg=Widgets.COLOR_FONDO,height=altoTop,width=(ancho/2)-Widgets.MARGEN_X)
+        frameTopIzquierdo.pack(side = RIGHT, fill = BOTH, expand = TRUE)
+
+        Label(frameTopDerecho, text="Motivo de Rechazo : "+motivoTipo,font=(Widgets.FUENTE_PRINCIPAL, 9),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+        Label(frameTopDerecho, text="Número de Recepción : "+str(nroRecepcion),font=(Widgets.FUENTE_PRINCIPAL, 9),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+
+        Label(frameTopIzquierdo, text="Fecha Desde :  "+str(fechaD)[0:19],background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+        Label(frameTopIzquierdo, text="Fecha Hasta :  "+str(fechaH)[0:19],background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+
+
+
+         #---Frame Tabla---
+        frameTabla = Frame(self.contenedor,bg=Widgets.COLOR_FONDO,height=self.altoContenedor-altoTop) 
+        frameTabla.pack(side = BOTTOM, fill = BOTH, expand = TRUE, padx=Widgets.MARGEN_X)
+        frameTabla.propagate(False)
+
+        self.tabla = Treeview(frameTabla, column=("#1", "#2", "#3","#4","#5"), show='headings',height=21,selectmode=BROWSE)
+        self.tabla.pack(side=LEFT)
+
+        self.tabla.column("#1", anchor=CENTER, width=150)
+        self.tabla.heading("#1", text="Fecha Recepción")
+        self.tabla.column("#2", anchor=CENTER, width=150)
+        self.tabla.heading("#2", text="Número de Recepción")
+        self.tabla.column("#3", anchor=CENTER, width=100)
+        self.tabla.heading("#3", text="Lectura 1")
+        self.tabla.column("#4", anchor=CENTER, width=100)
+        self.tabla.heading("#4", text="Lectura 2")
+        self.tabla.column("#5", anchor=CENTER, width=200)
+        self.tabla.heading("#5", text="Motivo Rechazo")
+
+        scrollbar = Scrollbar(frameTabla, orient=VERTICAL)
+        scrollbar.pack(side=RIGHT, fill=Y)
+
+        self.tabla.config(yscrollcommand=scrollbar.set)
+        scrollbar.config(command=self.tabla.yview)
+
+        for row in rechazos:
+            self.tabla.insert("", END, values=(row[0][0:19],row[1],row[2],row[3],row[4])  )
+
+        #Botones
+        botonCSV = Widgets.botonPrincipal(self.frameInferior,'Generar CSV',lambda :self.guardarCSV(rechazos))
+        botonCSV.pack(side=LEFT, anchor=SW,pady=10,padx=(10,0))
+        botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Cerrar',self.ventana.destroy)
+        botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
+
+    def guardarCSV(self,rechazos):
+        archivo = filedialog.asksaveasfile(mode ='w',title='Exportar a CSV',filetypes= [("Arhcivo CSV","*.csv")], defaultextension='.csv')
+        titulos = ['Fecha Recepción','Número de Recepción','Lectura 1','Lectura 2','Motivo Rechazo']
+        with open(archivo.name, 'w+', newline ='',) as archivo:    
+            escritor = csv.writer(archivo,delimiter = ";")
+            escritor.writerow(titulos)
+            escritor.writerows(rechazos)
+
+class VentanaDetallesModificacion(Widgets.VentanaHija):
+    def __init__(self,ventanaMadre,ancho,alto,titulo,modificacion):
+
+        Widgets.VentanaHija.__init__(self,ventanaMadre,ancho,alto,titulo)
+
+        nroModificacion = modificacion[0][0]
+        fecha = modificacion[0][1]
+        tipo = modificacion[0][2]
+        altoTop = 64
+   
+        #---Frame TOP---
+        frameTop = Frame(self.contenedor,bg=Widgets.COLOR_FONDO,height=altoTop) 
+        frameTop.pack(side = TOP, fill = X, expand = TRUE, padx=Widgets.MARGEN_X)
+        frameTop.propagate(False)
+        frameTopDerecho = Frame(frameTop,bg=Widgets.COLOR_FONDO,height=altoTop,width=(ancho/2)-Widgets.MARGEN_X)
+        frameTopDerecho.pack(side = LEFT, fill = BOTH, expand = TRUE)
+        frameTopIzquierdo = Frame(frameTop,bg=Widgets.COLOR_FONDO,height=altoTop,width=(ancho/2)-Widgets.MARGEN_X)
+        frameTopIzquierdo.pack(side = RIGHT, fill = BOTH, expand = TRUE)
+
+        Label(frameTopDerecho, text="Modificacion : "+str(nroModificacion),font=(Widgets.FUENTE_PRINCIPAL, 9),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+        Label(frameTopDerecho, text="Tipo : "+tipo,font=(Widgets.FUENTE_PRINCIPAL, 9),background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+        
+        Label(frameTopIzquierdo, text="Fecha :  "+str(fecha)[0:19],background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+       
+
+        #---Frame Tabla---
+        frameTabla = Frame(self.contenedor,bg=Widgets.COLOR_FONDO,height=self.altoContenedor-altoTop) 
+        frameTabla.pack(side = TOP, fill = BOTH, expand = TRUE, padx=Widgets.MARGEN_X)
+        frameTabla.propagate(False)
+
+
+        self.tabla = Treeview(frameTabla, column=("#1","#2"), show='headings',height=21,selectmode=BROWSE)
+        self.tabla.pack(side=LEFT)
+
+        self.tabla.bind("<Double-1>", self.OnDoubleClick)
+
+        self.tabla.column("#1", anchor=CENTER, width=300)
+        self.tabla.heading("#1", text="Número de Farmabox")
+        self.tabla.column("#2", anchor=CENTER, width=290)
+        self.tabla.heading("#2", text="Tamaño Farmabox")
+
+        scrollbar = Scrollbar(frameTabla, orient=VERTICAL)
+        scrollbar.pack(side=RIGHT, fill=Y)
+
+        self.tabla.config(yscrollcommand=scrollbar.set)
+        scrollbar.config(command=self.tabla.yview)
+
+        modificacionConTamanio = []
+
+        if modificacion is not None:
+            for row in modificacion:
+                nueva = list(row)
+                if Recursos.esCubetaChica(row[3]):
+                    nueva.append("Chico")
+                else:
+                    nueva.append("Grande")
+                modificacionConTamanio.append(nueva)
+                self.tabla.insert("",END, values=(nueva[3],nueva[4]) )  
+
+        #Botones
+        botonCSV = Widgets.botonPrincipal(self.frameInferior,'Generar CSV',lambda: self.guardarCSV(modificacionConTamanio))
+        botonCSV.pack(side=LEFT, anchor=SW,pady=10,padx=(10,0))
+        #botonExcel = Widgets.botonPrincipal(self.frameInferior,'Generar Excel',self.ventana.destroy)
+        #botonExcel.pack(side=LEFT, anchor=CENTER,pady=10,padx=5)
+        botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Cerrar',self.ventana.destroy)
+        botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
+
+    def guardarCSV(self,modificacion):
+        archivo = filedialog.asksaveasfile(mode ='w',title='Exportar a CSV',filetypes= [("Arhcivo CSV","*.csv")], defaultextension='.csv')
+        titulos = ['Número Modificación','Fecha','Tipo','Número Farmabox','Tamaño Farmabox']
+        with open(archivo.name, 'w+', newline ='',) as archivo:    
+            escritor = csv.writer(archivo,delimiter = ";")
+            escritor.writerow(titulos)
+            escritor.writerows(modificacion)
+    
+    def OnDoubleClick(self, event):
+        item = self.tabla.selection()[0]
+        nroFarmabox =  self.tabla.item(item,"values")[0]
+        self.ventanaMadre.buscarFarmabox(nroFarmabox,'','')
