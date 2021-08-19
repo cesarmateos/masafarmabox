@@ -4,3 +4,13 @@ Recursos/
 VersionesViejas/
 Imagenes/Originales/
 __pycache__/
+.vscode
+build
+dist
+
+#Archivos
+*.pyo
+*.spec
+
+config.ini
+BaseFarmabox.db
