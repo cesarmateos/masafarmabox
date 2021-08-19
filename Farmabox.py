@@ -13,4 +13,3 @@ ventana.mainloop()
 
 #archivo = Recursos.rutaArchivo('Recursos/FarmaboxAlta.csv')
 #BaseDatos.cargarFarmaboxDesdeCSV(archivo,1)
-

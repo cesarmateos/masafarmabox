@@ -16,15 +16,13 @@ COLOR_FONDO = 'white'
 
 
 #Otras Constantes
-TITULO = 'MASAfarmabox 1.0'
-ALTO_RAYA = 3
 MARGEN_X = 20
 FUENTE_PRINCIPAL = "Verdana"
 FILAS_MAX = 20
 COLUMNA_MAX = 4
 
 def linea(contenedor, ancho, fila, cantidadColumnas):
-    retorno = Canvas(contenedor, width=ancho, height=ALTO_RAYA,bg='white',highlightthickness=0)
+    retorno = Canvas(contenedor, width=ancho, height=3,bg='white',highlightthickness=0)
     retorno.create_line(0, 1, ancho, 1)
     retorno.grid(row=fila,column=0,columnspan=cantidadColumnas,sticky=N,pady=(0,0))
     return retorno

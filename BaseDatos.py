@@ -162,27 +162,25 @@ def encontrarFarmabox(NroFarmabox):
     cursor.close
     return farmabox
 
-def buscarRecepciones(fechaDesde,fechaHasta,radio,transporte,empresa):
+def buscarRecepciones(fechaDesde,fechaHasta,radio,transporte,empresa,estado):
     conexion = conectarBase()
     cursor = conexion.cursor()
     argumentosLista = []
     primero = True
 
     
-    parte1 = ('SELECT RECEPCION.NroRecepcion,FechaRecepcion,CodRadio,TRANSPORTISTA.NombreTransportista,EMPRESA.NombreEmpresa,COUNT(FB_X_RECEPCION.NroFarmabox) AS CantidadFarmabox,Tapas,Procesado '
+    querySQL = ('SELECT RECEPCION.NroRecepcion,FechaRecepcion,CodRadio,TRANSPORTISTA.NombreTransportista,EMPRESA.NombreEmpresa,COUNT(FB_X_RECEPCION.NroFarmabox) AS CantidadFarmabox,Tapas,Procesado '
         'FROM RECEPCION '
         'JOIN TRANSPORTISTA ON TRANSPORTISTA.NroTransportista = RECEPCION.NroTransportista '
         'JOIN EMPRESA ON EMPRESA.CodEmpresa = TRANSPORTISTA.CodEmpresa '
         'JOIN FB_X_RECEPCION ON FB_X_RECEPCION.NroRecepcion = RECEPCION.NroRecepcion ')
 
-    parte2 = parte3 = parte4 = parte5 = parte6 = parte7 = parte8 = ''
-    parte9 = 'GROUP BY RECEPCION.NroRecepcion '
     
     if fechaDesde == '' and fechaHasta =='':
         pass
     else:
         primero = False
-        parte2 = 'WHERE FechaRecepcion BETWEEN ? AND ? '
+        querySQL += 'WHERE FechaRecepcion BETWEEN ? AND ? '
         fechaDesdeFormateada = None
         fechaHastaFormateada = None
         if fechaDesde != '' and fechaHasta !='':
@@ -207,24 +205,24 @@ def buscarRecepciones(fechaDesde,fechaHasta,radio,transporte,empresa):
         pass
     else:
         if primero:
-            parte3 ='WHERE '
+            querySQL +='WHERE '
             primero = False 
             
         else:
-            parte3 ='AND '
-        parte4 = 'CodRadio=? '
+            querySQL +='AND '
+        querySQL += 'CodRadio=? '
         argumentosLista.append(radio)
 
     if transporte == 0:
         pass
     else:
         if primero:
-            parte5 ='WHERE '
+            querySQL +='WHERE '
             primero = False 
             
         else:
-            parte5 ='AND '
-        parte6 = 'RECEPCION.NroTransportista=? '
+            querySQL +='AND '
+        querySQL += 'RECEPCION.NroTransportista=? '
         argumentosLista.append(transporte)
 
 
@@ -232,15 +230,27 @@ def buscarRecepciones(fechaDesde,fechaHasta,radio,transporte,empresa):
         pass
     else:
         if primero:
-            parte7 ='WHERE ' 
+            querySQL +='WHERE ' 
+            primero = False
             
         else:
-            parte7 ='AND '
-        parte8 = 'EMPRESA.CodEmpresa=? '
+            querySQL +='AND '
+        querySQL += 'EMPRESA.CodEmpresa=? '
         argumentosLista.append(empresa)
 
-   
-    querySQL =  parte1 + parte2 + parte3 + parte4 + parte5 + parte6 + parte7+ parte8 +parte9
+    if estado == 2:
+        pass
+    else:
+        if primero:
+            querySQL +='WHERE ' 
+            
+        else:
+            querySQL +='AND '
+        querySQL += 'RECEPCION.Procesado=? '
+        argumentosLista.append(estado)
+
+
+    querySQL +=  'GROUP BY RECEPCION.NroRecepcion '
 
     argumentos = tuple(argumentosLista)
     cursor.execute(querySQL,(argumentos))
@@ -335,17 +345,16 @@ def buscarModificaciones(fechaDesde,fechaHasta,tipo):
     primero = True
 
     
-    parte1 = ('SELECT NroModificacion, TipoModificacion, FechaModificacion '
+    querySQL = ('SELECT NroModificacion, TipoModificacion, FechaModificacion '
                 'FROM MODIFICACION '
                 'JOIN TIPOS_MODIFICACION ON TIPOS_MODIFICACION.CodTipoModificacion = MODIFICACION.CodTipoModificacion ')
 
-    parte2 = parte3 = parte4 = ''
     
     if fechaDesde == '' and fechaHasta =='':
         pass
     else:
         primero = False
-        parte2 = 'WHERE FechaModificacion BETWEEN ? AND ? '
+        querySQL += 'WHERE FechaModificacion BETWEEN ? AND ? '
         fechaDesdeFormateada = None
         fechaHastaFormateada = None
         if fechaDesde != '' and fechaHasta !='':
@@ -371,16 +380,13 @@ def buscarModificaciones(fechaDesde,fechaHasta,tipo):
         pass
     else:
         if primero:
-            parte3 ='WHERE '
+            querySQL +='WHERE '
             primero = False 
         else:
-            parte3 ='AND '
-        parte4 = 'TIPOS_MODIFICACION.CodTipoModificacion=? '
+            querySQL +='AND '
+        querySQL += 'TIPOS_MODIFICACION.CodTipoModificacion=? '
         argumentosLista.append(tipo)
 
-
-   
-    querySQL =  parte1 + parte2 + parte3 + parte4
 
     argumentos = tuple(argumentosLista)
     cursor.execute(querySQL,(argumentos))
@@ -414,18 +420,17 @@ def buscarRechazos(fechaDesde,fechaHasta,motivo,nroRecepcion):
     argumentosLista = []
     primero = True
 
-    parte1 = ('SELECT RECEPCION.FechaRecepcion, RECEPCION.NroRecepcion, Lectura1, Lectura2, MotivoRechazo '
+    querySQL = ('SELECT RECEPCION.FechaRecepcion, RECEPCION.NroRecepcion, Lectura1, Lectura2, MotivoRechazo '
                 'FROM RECHAZOS_X_RECEPCION '
                 'JOIN RECEPCION ON RECEPCION.NroRecepcion = RECHAZOS_X_RECEPCION.NroRecepcion '
                 'JOIN MOTIVO_RECHAZO ON MOTIVO_RECHAZO.CodRechazo = RECHAZOS_X_RECEPCION.CodMotivoRechazo ')
 
-    parte2 = parte3 = parte4 = parte5 = parte6 =  ''
     
     if fechaDesde == '' and fechaHasta =='':
         pass
     else:
         primero = False
-        parte2 = 'WHERE FechaRecepcion BETWEEN ? AND ? '
+        querySQL += 'WHERE FechaRecepcion BETWEEN ? AND ? '
         fechaDesdeFormateada = None
         fechaHastaFormateada = None
         if fechaDesde != '' and fechaHasta !='':
@@ -451,26 +456,23 @@ def buscarRechazos(fechaDesde,fechaHasta,motivo,nroRecepcion):
         pass
     else:
         if primero:
-            parte3 ='WHERE '
+            querySQL +='WHERE '
             primero = False 
         else:
-            parte3 ='AND '
-        parte4 = 'MOTIVO_RECHAZO.CodRechazo=? '
+            querySQL +='AND '
+        querySQL += 'MOTIVO_RECHAZO.CodRechazo=? '
         argumentosLista.append(motivo)
 
     if nroRecepcion == '':
         pass
     else:
         if primero:
-            parte5 ='WHERE '
+            querySQL +='WHERE '
             primero = False 
         else:
-            parte5 ='AND '
-        parte6 = 'RECEPCION.NroRecepcion=? '
+            querySQL +='AND '
+        querySQL += 'RECEPCION.NroRecepcion=? '
         argumentosLista.append(nroRecepcion)
-
-
-    querySQL =  parte1 + parte2 + parte3 + parte4  + parte5 + parte6
 
     argumentos = tuple(argumentosLista)
     cursor.execute(querySQL,(argumentos))

@@ -12,8 +12,6 @@ import Widgets
 import os
 import sys
 import csv
-import pandas as Pandas
-
 
 class Ventana(Tk):
 
@@ -40,7 +38,8 @@ class Ventana(Tk):
         margenPosicional = str(int((screen_width - self.anchoVentana)/ 2))
 
          # Título e Ícono
-        self.title(Widgets.TITULO)
+        TITULO = 'MASAfarmabox 1.0'
+        self.title(TITULO)
         rutaIcono = Recursos.rutaArchivo('Imagenes/Pantuflas.ico')
         self.iconbitmap(rutaIcono)
 
@@ -320,19 +319,27 @@ class Ventana(Tk):
         listaEmpresa.current(len(valoresEmpresa)-1)
         listaEmpresa.grid(row=4,column=1,sticky=W,columnspan=3,pady=margenY)
 
+        #Estado
+        Label(seccionRecepciones.contenido, text="Estado",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=5,column=0,sticky=E,pady=margenY,padx=(0,4))
+        estados = [(0,"Procesados"),(1,"Sin Procesar"),(2,"TODOS")]
+        valoresEstados = [valores[1] for valores in estados]  
+        listaEstado = Combobox(seccionRecepciones.contenido,values=valoresEstados,state='readonly',width=40)
+        listaEstado.current(len(valoresEstados)-1)
+        listaEstado.grid(row=5,column=1,sticky=W,columnspan=3,pady=margenY)
+
         
         #Buscar
-        botonBuscarRecepcionA = Widgets.botonMicro(seccionRecepciones.contenido,"Buscar",lambda: VentanaRecepciones(self,self.anchoVentana,600,"Consulta Recepciones",fechaDesdeRecep.get(),fechaHastaRecep.get(),(listaRadio.current(),radios),(listaTransp.current(),transportistas),(listaEmpresa.current(),empresas)))
-        botonBuscarRecepcionA.grid(row=5,column=2,sticky=E,pady=(margenY,0))   
+        botonBuscarRecepcionA = Widgets.botonMicro(seccionRecepciones.contenido,"Buscar",lambda: VentanaRecepciones(self,self.anchoVentana,600,"Consulta Recepciones",fechaDesdeRecep.get(),fechaHastaRecep.get(),(listaRadio.current(),radios),(listaTransp.current(),transportistas),(listaEmpresa.current(),empresas),(listaEstado.current(),estados)))
+        botonBuscarRecepcionA.grid(row=6,column=2,sticky=E,pady=(margenY,0))   
 
         
         #Detalle Recepción
-        Label(seccionRecepciones.contenido, text="Recepción Nro",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=6,column=0,sticky=E,pady=(20,margenY),padx=(0,4))
+        Label(seccionRecepciones.contenido, text="Recepción Nro",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=7,column=0,sticky=E,pady=(20,margenY),padx=(0,4))
         self.detalleRecepcion = Entry(seccionRecepciones.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=18,highlightthickness=2)
-        self.detalleRecepcion.grid(row=6,column=1,sticky=W,pady=(20,margenY))
+        self.detalleRecepcion.grid(row=7,column=1,sticky=W,pady=(20,margenY))
         self.commandBuscarRecepcion = lambda event: self.buscarRecepcion(self.detalleRecepcion.get())
         botonBuscarRecepcionB = Widgets.botonMicro(seccionRecepciones.contenido,"Buscar",lambda: self.buscarRecepcion(self.detalleRecepcion.get()))
-        botonBuscarRecepcionB.grid(row=6,column=2,sticky=E,pady=(20,margenY))   
+        botonBuscarRecepcionB.grid(row=7,column=2,sticky=E,pady=(20,margenY))   
         
 
         
@@ -452,18 +459,6 @@ class Ventana(Tk):
 
         #Bindings del Enter
         self.bind_all("<Button-1>", lambda event: self.bindearEnter(event))
-
-    def bindearEnter(self,event):
-        try:
-            widget = self.focus_get()
-            if widget == self.nroFarmabox:
-                self.bind('<Return>', self.commandBuscarFarmabox)
-            elif widget == self.detalleRecepcion:
-                self.bind('<Return>', self.commandBuscarRecepcion)
-            elif widget == self.detalleModificacion:
-                self.bind('<Return>', self.commandBuscarModificacion)
-        except:
-            pass
 
     def pantallaConfiguracion(self):
         self.pantalla = 4
@@ -600,6 +595,33 @@ class Ventana(Tk):
         botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Volver',self.pantallaInicial)
         botonFinalizar.pack(side=RIGHT, anchor=SE)
 
+    def bindearEnter(self,event):
+        try:
+            widget = self.focus_get()
+            if widget == self.nroFarmabox:
+                self.bind('<Return>', self.commandBuscarFarmabox)
+            elif widget == self.detalleRecepcion:
+                self.bind('<Return>', self.commandBuscarRecepcion)
+            elif widget == self.detalleModificacion:
+                self.bind('<Return>', self.commandBuscarModificacion)
+        except:
+            pass
+
+    def limpiarFrame(self):
+        self.encabezado.set("")
+        self.subtitulo.set("")
+
+        for widgets in self.contenedor.winfo_children():
+            widgets.destroy()
+        for widgets in self.frameInferior.winfo_children():
+            widgets.destroy()
+
+    def recibirDatos(self,dato1,dato2):
+        if self.pantalla == 1:
+            self.validarTransportista(dato1)
+        elif self.pantalla == 2:
+            self.recepcion.agregarFarmabox(self,dato1,dato2)
+
     def cambiarValorConfiguracion(self,contenedor, textoVariable,botonCambiar,fila,columna,valores,grupo,item):
         lista = Combobox(contenedor,values=valores,state='readonly',width=10)
         lista.current(0)
@@ -616,15 +638,6 @@ class Ventana(Tk):
         textoVariable.set(dato)
         Recursos.modificarConfig(grupo,item,dato)
    
-    def limpiarFrame(self):
-        self.encabezado.set("")
-        self.subtitulo.set("")
-
-        for widgets in self.contenedor.winfo_children():
-            widgets.destroy()
-        for widgets in self.frameInferior.winfo_children():
-            widgets.destroy()
-
     def validarTransportista(self,nroTransportista):
         tuplaResultadoQuery = BaseDatos.encontrarTransportista(nroTransportista)
         
@@ -699,12 +712,6 @@ class Ventana(Tk):
         entradaQR.delete(0, 'end')
         self.validarTransportista(nroTransportista)
     
-    def recibirDatos(self,dato1,dato2):
-        if self.pantalla == 1:
-            self.validarTransportista(dato1)
-        elif self.pantalla == 2:
-            self.recepcion.agregarFarmabox(self,dato1,dato2)
-
     def lanzarVentanaTapas(self):
         ancho = 450
         alto = 170
@@ -912,7 +919,7 @@ class VentanaFinalizarRecepcion(Widgets.VentanaHija):
         self.ventana.destroy()
 
 class VentanaRecepciones(Widgets.VentanaHija):
-    def __init__(self,ventanaMadre,ancho,alto,titulo,fechaD,fechaH,radio,transp,empresa):
+    def __init__(self,ventanaMadre,ancho,alto,titulo,fechaD,fechaH,radio,transp,empresa,estado):
 
         Widgets.VentanaHija.__init__(self,ventanaMadre,ancho,alto,titulo)
         
@@ -935,8 +942,9 @@ class VentanaRecepciones(Widgets.VentanaHija):
         if nroEmpresa != 0:
             nroEmpresaImrimible = " ("+str(nroEmpresa)+")"
 
-        
-        recepciones = BaseDatos.buscarRecepciones(fechaD,fechaH,codRadio,nroTransp,nroEmpresa)
+        estadoText = estado[1][estado[0]][1]
+
+        recepciones = BaseDatos.buscarRecepciones(fechaD,fechaH,codRadio,nroTransp,nroEmpresa,estado[0])
 
         #---Frame TOP---
         altoTop = 64
@@ -954,6 +962,7 @@ class VentanaRecepciones(Widgets.VentanaHija):
 
         Label(frameTopIzquierdo, text="Fecha Desde :  "+str(fechaD)[0:19],background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
         Label(frameTopIzquierdo, text="Fecha Hasta :  "+str(fechaH)[0:19],background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
+        Label(frameTopIzquierdo, text="Estado :  "+estadoText,background=Widgets.COLOR_FONDO).pack(side=TOP,anchor=NW)
 
 
         #---Frame Tabla---

@@ -84,7 +84,7 @@ def imprimirTicket(recepcion):
     tsclibrary.windowsfontW("590","10","34","0", "0", "0", "Arial","Recep: "+str(recepcion.nroRecepcion).zfill(8))
     tsclibrary.windowsfontW("10","50","34","0", "0", "0", "Arial",recepcion.transportista[2])
     tsclibrary.windowsfontW("50","55","26","0", "0", "0", "Arial","("+ recepcion.transportista[3]+")")
-    tsclibrary.windowsfontW("545","50","34","0", "0", "0", "Arial",fechaImprimible)
+    tsclibrary.windowsfontW("545","50","34","0", "0", "0", "Arial",fechaImprimible[0:19])
     tsclibrary.windowsfontW("135","120","50","0", "0", "1", "Arial","Chicos")
     tsclibrary.windowsfontW("540","120","50","0", "0", "1", "Arial","Grandes")
 
