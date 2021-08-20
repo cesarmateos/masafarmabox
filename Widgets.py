@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import font as tkFont
 from PIL import Image, ImageTk
 
+import os
 import Recursos
 
 #Colores
@@ -21,9 +22,9 @@ FUENTE_PRINCIPAL = "Verdana"
 FILAS_MAX = 20
 COLUMNA_MAX = 4
 
-def linea(contenedor, ancho, fila, cantidadColumnas):
+def linea(contenedor, ancho, fila, cantidadColumnas, **kwargs):
     retorno = Canvas(contenedor, width=ancho, height=3,bg='white',highlightthickness=0)
-    retorno.create_line(0, 1, ancho, 1)
+    retorno.create_line(0, 1, ancho, 1, **kwargs)
     retorno.grid(row=fila,column=0,columnspan=cantidadColumnas,sticky=N,pady=(0,0))
     return retorno
 
@@ -52,16 +53,23 @@ class Btn(Button):
         
         super().__init__(root, fg='white',compound=CENTER,background=COLOR_FONDO,highlightbackground=COLOR_FONDO, font=fuente,highlightthickness=0,borderwidth=0, *args, **kwargs)
 
+        
         img1 = Recursos.rutaArchivo('Imagenes/'+imagenNormal)
         img2 = Recursos.rutaArchivo('Imagenes/'+imagenHover)
 
-        self.img = ImageTk.PhotoImage(Image.open(img1))
-        self.img2 = ImageTk.PhotoImage(Image.open(img2))
+        if os.path.exists(img1):
+            self.img = ImageTk.PhotoImage(Image.open(img1))
+            self['image'] = self.img
+            self.bind('<Leave>', self.leave)
 
-        self['image'] = self.img
+            if os.path.exists(img2):  
+                self.img2 = ImageTk.PhotoImage(Image.open(img2))
+                self.bind('<Enter>', self.enter) 
+        else:
+            self.configure(background=COLOR_MORADO_OSCURO, width=15, height=2,highlightthickness=1,borderwidth=1)
+
         
-        self.bind('<Enter>', self.enter)
-        self.bind('<Leave>', self.leave)
+        
         
     def enter(self, event):
         self.config(image=self.img2)
@@ -78,7 +86,8 @@ class VentanaHija():
         self.ventana.resizable(0, 0)
         self.ventana.configure(bg=COLOR_FONDO)
         rutaIcono = Recursos.rutaArchivo('Imagenes/Pantuflas.ico')
-        self.ventana.iconbitmap(rutaIcono)
+        if os.path.exists(rutaIcono):
+            self.ventana.iconbitmap(rutaIcono)
 
         altoLinea = 1
         self.altoContenedor = alto-altoLinea-ventanaMadre.altoFrameInferior
@@ -106,9 +115,10 @@ class Seccion(Frame):
         
         
         linea1 = linea(self,ancho,0,1)
-        linea1.grid(pady=(15,0))
+        linea1.grid(pady=(11,0))
         Label(self, text=titulo,font="Verdana 12 bold",bg=COLOR_MORADO_SUAVE,fg=COLOR_MORADO,anchor=CENTER).grid(row=1,column=0,sticky=EW)
-        linea(self,ancho,2,1)
+        linea2 = linea(self,ancho,2,1)
+        linea2.grid(pady=(0,2))
         #self.contenido.grid_columnconfigure(0,weight=1)
         self.contenido = Frame(self,width=ancho,background=COLOR_FONDO)
         self.contenido.grid(row=3,column=0,sticky=EW)

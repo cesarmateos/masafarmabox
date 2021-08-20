@@ -1,7 +1,7 @@
 import Recursos
 import Ventanas
 import Scanners
-#import BaseDatos
+
 
 Recursos.leerConfig()
 

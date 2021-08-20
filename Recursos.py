@@ -5,12 +5,12 @@ from configparser import ConfigParser
 
 
 #VARIABLES GLOBALES CONFIG
-puertoScanner1 = ''
-puertoScanner2 = ''
-baudScanner1 = ''
-baudScanner2 = ''
-nombreBase = ''
-delayScanner = 0.1
+puertoScanner1 = 'COM1'
+puertoScanner2 = 'COM2'
+baudScanner1 = '9600'
+baudScanner2 = '9600'
+nombreBase = 'BaseFarmabox.db'
+delayScanner = 0.15
 feed = 350
 backfeed = 200
 
@@ -18,7 +18,6 @@ backfeed = 200
 def leerConfig():
     configParser = ConfigParser()   
     rutaConfig = rutaArchivo('config.ini')
-    configParser.read(rutaConfig)
 
     global puertoScanner1
     global puertoScanner2
@@ -28,6 +27,32 @@ def leerConfig():
     global delayScanner
     global feed
     global backfeed
+
+    if not os.path.exists(rutaConfig):
+        configParser["Scanner1"]={
+                "PUERTO": puertoScanner1,
+                "BAUD": baudScanner1
+                }
+        configParser["Scanner2"]={
+                "PUERTO": puertoScanner2,
+                "BAUD": baudScanner2
+                }
+        configParser["Sincronizacion"]={
+                "TOLERANCIA": str(delayScanner)
+                } 
+        configParser["Base"]={
+                "ARCHIVO": nombreBase
+                }
+        configParser["Impresora"]={
+                "feed": str(feed),
+                "backfeed": str(backfeed)
+                }                   
+        with open(rutaConfig,"w") as file_object:
+            configParser.write(file_object)
+
+    configParser.read(rutaConfig)
+
+
     puertoScanner1 = configParser.get('Scanner1', 'PUERTO')
     puertoScanner2= configParser.get('Scanner2', 'PUERTO')
     baudScanner1 = configParser.get('Scanner1', 'BAUD')

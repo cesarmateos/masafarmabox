@@ -41,7 +41,8 @@ class Ventana(Tk):
         TITULO = 'MASAfarmabox 1.0'
         self.title(TITULO)
         rutaIcono = Recursos.rutaArchivo('Imagenes/Pantuflas.ico')
-        self.iconbitmap(rutaIcono)
+        if os.path.exists(rutaIcono):
+            self.iconbitmap(rutaIcono)
 
         altoVentana = self.altoFrameInferior + self.altoFrameMedio + self.altoFrameSuperior
         self.geometry(str(self.anchoVentana)+"x"+str(altoVentana)+"+"+margenPosicional+"+10")
@@ -62,9 +63,15 @@ class Ventana(Tk):
         Label(self.frameSuperior, textvariable=self.subtitulo,font=(Widgets.FUENTE_PRINCIPAL, 9),background=Widgets.COLOR_FONDO).grid(row=1,column=0,sticky=W,padx=Widgets.MARGEN_X)
 
         #Logo
-        imagenLogo = PhotoImage(file=Recursos.rutaArchivo('Imagenes/Logo.png'))
-        logo = Label(self.frameSuperior, image=imagenLogo,bg=Widgets.COLOR_FONDO)
-        logo.photo = imagenLogo
+        rutaLogo = Recursos.rutaArchivo('Imagenes/Logo.png')
+        logo = Label(self.frameSuperior,bg=Widgets.COLOR_FONDO)
+
+        if os.path.exists(rutaIcono):
+            imagenLogo = PhotoImage(file=rutaLogo)       
+            logo.configure(image=imagenLogo)
+            logo.photo = imagenLogo
+        else :
+            logo.configure(text="MASA")
         logo.grid(row=0,column=1,rowspan=2,sticky=N+S+E,pady=10,padx=Widgets.MARGEN_X)
 
 
@@ -493,7 +500,7 @@ class Ventana(Tk):
 
 
         #--Seccion Scanner 1--
-        seccionScannner1 = Widgets.Seccion(frameMedio," Scanner 1",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
+        seccionScannner1 = Widgets.Seccion(frameMedio,"Scanner 1",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
         seccionScannner1.grid(row=0,column=0)
 
         #Puerto Scanner 1
@@ -515,7 +522,7 @@ class Ventana(Tk):
         botonCambiarBaud1.grid(row=0,column=5,sticky=W)
 
         #--Seccion Scanner 2--
-        seccionScannner2 = Widgets.Seccion(frameMedio," Scanner 2",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
+        seccionScannner2 = Widgets.Seccion(frameMedio,"Scanner 2",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
         seccionScannner2.grid(row=1,column=0)
 
         #Puerto Scanner 2
@@ -537,7 +544,7 @@ class Ventana(Tk):
         botonCambiarBaud2.grid(row=0,column=5,sticky=W)
 
         #--Seccion Sincronizacion--
-        seccionSincro = Widgets.Seccion(frameMedio," Sincronización de Scanners",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
+        seccionSincro = Widgets.Seccion(frameMedio,"Sincronización de Scanners",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
         seccionSincro.grid(row=2,column=0)
 
         #Tolerancia
@@ -555,12 +562,55 @@ class Ventana(Tk):
 
 
         #--Seccion Base--
-        seccionBase = Widgets.Seccion(frameMedio," Base",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
+        seccionBase = Widgets.Seccion(frameMedio,"Base de Datos",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
         seccionBase.grid(row=3,column=0)
+        
+        Label(seccionBase.contenido, text="Nueva Empresa",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,fg=Widgets.COLOR_NARANJA,anchor=W).grid(padx=0,row=0,column=0,columnspan=3,sticky=W)
+        Widgets.linea(seccionBase.contenido,anchoFrame,1,7,fill=Widgets.COLOR_NARANJA)
+        Label(seccionBase.contenido, text="Nombre: ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),pady=(2,0),row=2,column=0,sticky=W)
+        nombreEmpresa = Entry(seccionBase.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=23,highlightthickness=2)
+        nombreEmpresa.grid(padx=5,pady=(2,0),row=2,column=1,columnspan=2,sticky=W)
+        botonGuardarEmpresa = Widgets.botonMicro(seccionBase.contenido,"Agregar", lambda: self.agregarEmpresa(nombreEmpresa.get()))
+        botonGuardarEmpresa.grid(row=2,column=3,pady=(2,0),sticky=W)
+
+        Label(seccionBase.contenido, text="Nuevo Radio",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,fg=Widgets.COLOR_NARANJA,anchor=W).grid(padx=0,pady=(5,0),row=3,column=0,columnspan=3,sticky=W)
+        Widgets.linea(seccionBase.contenido,anchoFrame,4,7,fill=Widgets.COLOR_NARANJA)
+        Label(seccionBase.contenido, text="Código : ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),pady=(2,0),row=5,column=0,sticky=W)
+        nuevoCodRadio = Entry(seccionBase.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=10,highlightthickness=2)
+        nuevoCodRadio.grid(padx=5,row=5,column=1,sticky=W)
+        Label(seccionBase.contenido, text="Descripción: ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),pady=(2,0),row=5,column=2,sticky=W)
+        nuevaDescRadio = Entry(seccionBase.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=15,highlightthickness=2)
+        nuevaDescRadio.grid(padx=5,pady=(2,0),row=5,column=3,sticky=W)
+        botonGardarCodRadio = Widgets.botonMicro(seccionBase.contenido,"Agregar", lambda : self.agregarRadio(nuevoCodRadio.get(),nuevaDescRadio.get()))
+        botonGardarCodRadio.grid(row=5,column=4,pady=(2,0),sticky=W)
+
+        Label(seccionBase.contenido, text="Nuevo Transportista",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,fg=Widgets.COLOR_NARANJA,anchor=W).grid(padx=0,pady=(5,0),row=7,column=0,columnspan=3,sticky=W)
+        Widgets.linea(seccionBase.contenido,anchoFrame,8,7,fill=Widgets.COLOR_NARANJA)
+        Label(seccionBase.contenido, text="Código: ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),pady=(2,0),row=9,column=0,sticky=W)
+        nuevoCodTransportista= Entry(seccionBase.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=10,highlightthickness=2)
+        nuevoCodTransportista.grid(padx=5,pady=(2,0),row=9,column=1,sticky=W)
+        Label(seccionBase.contenido, text="Nombre: ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),pady=(2,0),row=9,column=2,sticky=W)
+        nuevoNomTransportista= Entry(seccionBase.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=29,highlightthickness=2)
+        nuevoNomTransportista.grid(padx=5,pady=(2,0),row=9,column=3,columnspan=2,sticky=W)
+
+        Label(seccionBase.contenido, text="Radio: ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),pady=(2,0),row=9,column=5,sticky=W)
+        radios = BaseDatos.obtenerRadios()
+        valores = [valores[0]+" - "+valores[1] for valores in radios]
+        listaRadios = Combobox(seccionBase.contenido,values=valores,state='readonly',width=40)
+        listaRadios.current(0)
+        listaRadios.grid(row=9,column=6,pady=(2,0),sticky=W)
+        Label(seccionBase.contenido, text="Empresa: ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),row=10,column=0,sticky=W)
+        empresas = BaseDatos.obtenerEmpresas()
+        valoresEmp = [valoresEmp[1] for valoresEmp in empresas]
+        listaEmpresas = Combobox(seccionBase.contenido,values=valoresEmp,state='readonly',width=28)
+        listaEmpresas.current(0)
+        listaEmpresas.grid(row=10,column=1,padx=5,pady=(2,0),columnspan=2,sticky=W)
+        botonGardarEmpresa = Widgets.botonMicro(seccionBase.contenido,"Agregar", lambda : self.agregarTransportista(nuevoNomTransportista.get(),nuevoCodTransportista.get(),(listaRadios.current(),radios),(listaEmpresas.current(),empresas)))
+        botonGardarEmpresa.grid(row=10,column=3,pady=(2,0),sticky=W)
 
 
         #--Seccion Impresora--
-        seccionImpresora = Widgets.Seccion(frameMedio," Impresora",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
+        seccionImpresora = Widgets.Seccion(frameMedio,"Impresora",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
         seccionImpresora.grid(row=4,column=0)
 
         #Backfeed
@@ -773,6 +823,16 @@ class Ventana(Tk):
         estilo.map('TCombobox', fieldbackground=[('readonly','white')])
         estilo.map('TCombobox', selectbackground=[('readonly', 'white')])
         estilo.map('TCombobox', selectforeground=[('readonly', 'black')])  
+
+    def agregarEmpresa(nombreEmpresa):
+        pass
+
+    def agregarRadio(codigo,descipcion):
+        pass
+
+    def agregarTransportista(codigo,nombre,radio,empresa):
+        pass
+
 
 class VentanaTapas(Widgets.VentanaHija):
     def __init__(self,ventanaMadre,ancho,alto,titulo):
@@ -1133,14 +1193,16 @@ class VentanaDetalleRecepcion(Widgets.VentanaHija):
         nroFarmabox =  self.tabla.item(item,"values")[0]
         self.ventanaMadre.buscarFarmabox(nroFarmabox,'','')
 
-class VentanaCalendario(Widgets.VentanaHija):
+class VentanaCalendario():
     def __init__(self,ventanaMadre,fechaEntry):
         
         self.fechaEntry = fechaEntry
-
         self.ventana = Toplevel(ventanaMadre)
+
         rutaIcono = Recursos.rutaArchivo('Imagenes/Pantuflas.ico')
-        self.ventana.iconbitmap(rutaIcono)
+
+        if os.path.exists(rutaIcono):
+            self.ventana.iconbitmap(rutaIcono)
 
         ancho = 255
         alto = 212

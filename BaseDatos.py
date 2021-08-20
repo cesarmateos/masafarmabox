@@ -482,6 +482,15 @@ def buscarRechazos(fechaDesde,fechaHasta,motivo,nroRecepcion):
     
     return rechazos
 
+def agregarEmpresa(nombreEmpresa):
+    pass
+
+def agregarRadio(codigo,descipcion):
+    pass
+
+def agregarTransportista(codigo,nombre,codRadio,nroEmpresa):
+    pass
+
 def cargarFarmaboxDesdeCSV(archivo,tipo:int):
     
     #Conecto y armo cursor
