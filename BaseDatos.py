@@ -6,10 +6,12 @@ import Recursos
 
 def conectarBase():
     rutaBase = Recursos.rutaArchivo(Recursos.nombreBase)
-    return sql.connect(rutaBase)
+    try:
+        return sql.connect(rutaBase)
+    except sql.Error as error:
+        print("Fallo al conectarse a la base datos:", error) 
 
 def encontrarTransportista(nroTransportista):
-    
     conexion = conectarBase()
     cursor = conexion.cursor()
 

@@ -14,6 +14,8 @@ delayScanner = 0.15
 feed = 350
 backfeed = 200
 
+version = '1.0'
+
 #FUNCIONES
 def leerConfig():
     configParser = ConfigParser()   
@@ -82,11 +84,18 @@ def esCubetaChica(cubeta):
         return False
     return True
 
-def imprimirTicket(recepcion):
+def imprimirTicket(recepcion): 
+
     rutaLibreria = rutaArchivo("Libs/TSCLIB.dll")
-    tsclibrary = ctypes.WinDLL(rutaLibreria);
+    if not os.path.exists(rutaLibreria):
+        return False
+
+    tsclibrary = ctypes.WinDLL(rutaLibreria); 
+    if tsclibrary.usbportqueryprinter() < 0:
+        return False
 
     tsclibrary.openportW("USB");
+
 
     xChicos1 = 10
     xChicos2 = 140
@@ -141,3 +150,4 @@ def imprimirTicket(recepcion):
     tsclibrary.printlabelW("1","1")
     tsclibrary.sendcommandW("FEED "+feed)
     tsclibrary.closeport()
+    return True

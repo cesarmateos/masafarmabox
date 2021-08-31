@@ -38,7 +38,7 @@ class Ventana(Tk):
         margenPosicional = str(int((screen_width - self.anchoVentana)/ 2))
 
          # Título e Ícono
-        TITULO = 'MASAfarmabox 1.0'
+        TITULO = 'MASAfarmabox ' + Recursos.version
         self.title(TITULO)
         rutaIcono = Recursos.rutaArchivo('Imagenes/Pantuflas.ico')
         if os.path.exists(rutaIcono):
@@ -66,7 +66,7 @@ class Ventana(Tk):
         rutaLogo = Recursos.rutaArchivo('Imagenes/Logo.png')
         logo = Label(self.frameSuperior,bg=Widgets.COLOR_FONDO)
 
-        if os.path.exists(rutaIcono):
+        if os.path.exists(rutaLogo):
             imagenLogo = PhotoImage(file=rutaLogo)       
             logo.configure(image=imagenLogo)
             logo.photo = imagenLogo
@@ -107,26 +107,24 @@ class Ventana(Tk):
         #Entrada de QR
         entradaQR = Entry(self.contenedor, font=(Widgets.FUENTE_PRINCIPAL,20), width=20,highlightthickness=2)
         entradaQR.focus_set()
-        entradaQR.place(x=235,y=250)  
+        entradaQR.place(x=235,y=250)
+        entradaQR.bind('<Return>',lambda event: self.validarTransportista(entradaQR))
 
+        
         #Boton Lupa
-        botonLupa = Widgets.Btn(self.contenedor, imagenNormal='Lupa.png', imagenHover='LupaHover.png', command=lambda: self.enterPricipal(self, entradaQR))
+        botonLupa = Widgets.Btn(self.contenedor, imagenNormal='Lupa.png', imagenHover='LupaHover.png', command=lambda: self.validarTransportista(entradaQR))
         botonLupa.place(x=600,y=245) 
-
-        #Activo el enter
-        self.bind('<Return>', lambda event : self.enterPricipal(self,entradaQR))
 
 
         #-------------FRAME INFERIOR------------
         #Boton Consultas         
         botonConsultas = Widgets.botonPrincipal(self.frameInferior,'Consultas',self.pantallaConsultas)
-        #botonRecepciones = Recursos.botonPrincipal(self.frameInferior,'Recepciones',lambda : PantallaRecepciones(self))
         botonConsultas.pack(side=RIGHT, anchor=SE)
 
         #Boton Configuración       
         botonConfiguración = Widgets.botonPrincipal(self.frameInferior,'Configuración',self.pantallaConfiguracion)
         botonConfiguración.pack(side=LEFT, anchor=SW)
-  
+
     def pantallaCargaRecepcion(self,recepcion):
         self.pantalla = 2
 
@@ -342,10 +340,10 @@ class Ventana(Tk):
         
         #Detalle Recepción
         Label(seccionRecepciones.contenido, text="Recepción Nro",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=7,column=0,sticky=E,pady=(20,margenY),padx=(0,4))
-        self.detalleRecepcion = Entry(seccionRecepciones.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=18,highlightthickness=2)
-        self.detalleRecepcion.grid(row=7,column=1,sticky=W,pady=(20,margenY))
-        self.commandBuscarRecepcion = lambda event: self.buscarRecepcion(self.detalleRecepcion.get())
-        botonBuscarRecepcionB = Widgets.botonMicro(seccionRecepciones.contenido,"Buscar",lambda: self.buscarRecepcion(self.detalleRecepcion.get()))
+        detalleRecepcion = Entry(seccionRecepciones.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=18,highlightthickness=2)
+        detalleRecepcion.grid(row=7,column=1,sticky=W,pady=(20,margenY))
+        detalleRecepcion.bind('<Return>', lambda event: self.buscarRecepcion(detalleRecepcion.get()))
+        botonBuscarRecepcionB = Widgets.botonMicro(seccionRecepciones.contenido,"Buscar",lambda: self.buscarRecepcion(detalleRecepcion.get()))
         botonBuscarRecepcionB.grid(row=7,column=2,sticky=E,pady=(20,margenY))   
         
 
@@ -370,13 +368,14 @@ class Ventana(Tk):
 
         #Número Farmabox
         Label(seccionFarmabox.contenido, text="Nro Farmabox",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=2,column=0,sticky=E,pady=margenY,padx=(20,4))
-        self.nroFarmabox = Entry(seccionFarmabox.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=23,highlightthickness=2)
-        self.nroFarmabox.grid(row=2,column=1,columnspan=2,sticky=E,pady=margenY)
+        nroFarmabox = Entry(seccionFarmabox.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=23,highlightthickness=2)
+        nroFarmabox.grid(row=2,column=1,columnspan=2,sticky=E,pady=margenY)
 
         #Buscar Farmabox
-        self.commandBuscarFarmabox = lambda event: self.buscarFarmabox(self.nroFarmabox.get(),fechaDesdeFarma.get(),fechaHastaFarma.get())
-        botonBuscarFarmabox = Widgets.botonMicro(seccionFarmabox.contenido,"Buscar",lambda: self.buscarFarmabox(self.nroFarmabox.get(),fechaDesdeFarma.get(),fechaHastaFarma.get() ))
-        botonBuscarFarmabox.grid(row=3,column=2,columnspan=3,sticky=E,pady=(margenY,0),padx=0)  
+        nroFarmabox.bind('<Return>',lambda event: self.buscarFarmabox(nroFarmabox.get(),fechaDesdeFarma.get(),fechaHastaFarma.get()))
+        botonBuscarFarmabox = Widgets.botonMicro(seccionFarmabox.contenido,"Buscar",lambda: self.buscarFarmabox(nroFarmabox.get(),fechaDesdeFarma.get(),fechaHastaFarma.get() ))
+        botonBuscarFarmabox.grid(row=3,column=2,columnspan=3,sticky=E,pady=(margenY,0),padx=0)
+
 
 
         
@@ -409,12 +408,12 @@ class Ventana(Tk):
         listaRechazados.grid(row=2,column=1,columnspan=3,sticky=W,pady=margenY)
 
         Label(seccionRechazados.contenido, text="Recepción Nro",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=3,column=0,sticky=E,pady=margenY,padx=(5,4))
-        self.nroRecepcionRechazados = Entry(seccionRechazados.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=18,highlightthickness=2)
-        self.nroRecepcionRechazados.grid(row=3,column=1,columnspan=3,sticky=W,pady=margenY)
-        self.commandBuscarRechazados = None #VER
-
+        nroRecepcionRechazados = Entry(seccionRechazados.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=18,highlightthickness=2)
+        nroRecepcionRechazados.grid(row=3,column=1,columnspan=3,sticky=W,pady=margenY)
+        nroRecepcionRechazados.bind('<Return>',lambda event: VentanRechazados(self,780,600,"Consulta Rechazos",fechaRechazDesde.get(),fechaRechazHasta.get(),(listaRechazados.current(),motivosRechazo),nroRecepcionRechazados.get()))
+        
         #Buscar
-        botonBuscarRechazo = Widgets.botonMicro(seccionRechazados.contenido,"Buscar",lambda: VentanRechazados(self,780,600,"Consulta Rechazox",fechaRechazDesde.get(),fechaRechazHasta.get(),(listaRechazados.current(),motivosRechazo),self.nroRecepcionRechazados.get()))
+        botonBuscarRechazo = Widgets.botonMicro(seccionRechazados.contenido,"Buscar",lambda: VentanRechazados(self,780,600,"Consulta Rechazos",fechaRechazDesde.get(),fechaRechazHasta.get(),(listaRechazados.current(),motivosRechazo),nroRecepcionRechazados.get()))
         botonBuscarRechazo.grid(row=4,column=3,columnspan=3,sticky=E,pady=(margenY,0))  
 
         
@@ -450,10 +449,10 @@ class Ventana(Tk):
 
         
         Label(seccionMovimientos.contenido, text="Modificación Nro",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=4,column=0,sticky=E,pady=(20,0),padx=(20,4))
-        self.detalleModificacion = Entry(seccionMovimientos.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=18,highlightthickness=2)
-        self.detalleModificacion.grid(row=4,column=1,columnspan=3,sticky=W,pady=(20,0))
-        self.commandBuscarModificacion = lambda event: self.buscarModificacion(self.detalleModificacion.get())
-        botonBuscarMovB = Widgets.botonMicro(seccionMovimientos.contenido,"Buscar",lambda: self.buscarModificacion(self.detalleModificacion.get()))
+        detalleModificacion = Entry(seccionMovimientos.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=18,highlightthickness=2)
+        detalleModificacion.grid(row=4,column=1,columnspan=3,sticky=W,pady=(20,0))
+        detalleModificacion.bind('<Return>',lambda event: self.buscarModificacion(detalleModificacion.get()))
+        botonBuscarMovB = Widgets.botonMicro(seccionMovimientos.contenido,"Buscar",lambda: self.buscarModificacion(detalleModificacion.get()))
         botonBuscarMovB.grid(row=4,column=2,columnspan=2,sticky=E,pady=(20,0),padx=(10,0) )
         
 
@@ -462,10 +461,6 @@ class Ventana(Tk):
         #Boton Finalizar
         botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Volver',self.pantallaInicial)         
         botonFinalizar.pack(anchor=SE)
-
-
-        #Bindings del Enter
-        self.bind_all("<Button-1>", lambda event: self.bindearEnter(event))
 
     def pantallaConfiguracion(self):
         self.pantalla = 4
@@ -645,18 +640,6 @@ class Ventana(Tk):
         botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Volver',self.pantallaInicial)
         botonFinalizar.pack(side=RIGHT, anchor=SE)
 
-    def bindearEnter(self,event):
-        try:
-            widget = self.focus_get()
-            if widget == self.nroFarmabox:
-                self.bind('<Return>', self.commandBuscarFarmabox)
-            elif widget == self.detalleRecepcion:
-                self.bind('<Return>', self.commandBuscarRecepcion)
-            elif widget == self.detalleModificacion:
-                self.bind('<Return>', self.commandBuscarModificacion)
-        except:
-            pass
-
     def limpiarFrame(self):
         self.encabezado.set("")
         self.subtitulo.set("")
@@ -688,32 +671,37 @@ class Ventana(Tk):
         textoVariable.set(dato)
         Recursos.modificarConfig(grupo,item,dato)
    
-    def validarTransportista(self,nroTransportista):
-        tuplaResultadoQuery = BaseDatos.encontrarTransportista(nroTransportista)
-        
-        if (tuplaResultadoQuery == None):
-            messagebox.showinfo(message="El transportista "+str(nroTransportista)+" no existe", title="Transportista no encontrado")
-        else:
-            transportista = list(tuplaResultadoQuery)
-            self.limpiarFrame()
+    def validarTransportista(self,entradaQR):
+        nroTransportista = entradaQR.get()
+        entradaQR.delete(0, 'end')
 
-            #--Frame Inferior--
-            botonVolver = Widgets.botonSecundario(self.frameInferior,'Cancelar',lambda: self.pantallaInicial())        
-            botonVolver.pack(side=LEFT, anchor=SW)
-            botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Iniciar Recepción',lambda: self.pantallaCargaRecepcion(Recepcion.Recepcion(transportista)))        
-            botonFinalizar.pack(side=RIGHT, anchor=SE)
+        try:
+            tuplaResultadoQuery = BaseDatos.encontrarTransportista(nroTransportista)
+            if (tuplaResultadoQuery == None):
+                messagebox.showinfo(message="El transportista "+str(nroTransportista)+" no existe", title="Transportista no encontrado")
+            else:
+                transportista = list(tuplaResultadoQuery)
+                self.limpiarFrame()
 
-            #--Frame Medio--
-            Label(self.contenedor, text=transportista[1]+" - "+transportista[4],font=(Widgets.FUENTE_PRINCIPAL, 20),bg=Widgets.COLOR_FONDO).pack(anchor=CENTER,side=TOP,pady=(180,20))
-            frameRadio = Frame(self.contenedor,background=Widgets.COLOR_FONDO)
-            frameRadio.pack(anchor=CENTER,side=TOP)
-            Label(frameRadio, text="Radio",font=(Widgets.FUENTE_PRINCIPAL, 13),bg=Widgets.COLOR_FONDO).grid(column=0,row=0,padx=3)
-            textoCodRadio = StringVar()
-            textoCodRadio.set(transportista[2]+": "+transportista[3])
-            radioElegido = Label(frameRadio, textvariable=textoCodRadio,font=(Widgets.FUENTE_PRINCIPAL, 13),bg=Widgets.COLOR_FONDO)
-            radioElegido.grid(column=1,row=0)
-            botonCambiar = Widgets.botonMicro(frameRadio,"Cambiar",lambda: self.cambiarValorRadio(frameRadio,radioElegido,textoCodRadio,botonCambiar,transportista))
-            botonCambiar.grid(row=0,column=2,sticky=W,padx=10)
+                #--Frame Inferior--
+                botonVolver = Widgets.botonSecundario(self.frameInferior,'Cancelar',lambda: self.pantallaInicial())        
+                botonVolver.pack(side=LEFT, anchor=SW)
+                botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Iniciar Recepción',lambda: self.pantallaCargaRecepcion(Recepcion.Recepcion(transportista)))        
+                botonFinalizar.pack(side=RIGHT, anchor=SE)
+
+                #--Frame Medio--
+                Label(self.contenedor, text=transportista[1]+" - "+transportista[4],font=(Widgets.FUENTE_PRINCIPAL, 20),bg=Widgets.COLOR_FONDO).pack(anchor=CENTER,side=TOP,pady=(180,20))
+                frameRadio = Frame(self.contenedor,background=Widgets.COLOR_FONDO)
+                frameRadio.pack(anchor=CENTER,side=TOP)
+                Label(frameRadio, text="Radio",font=(Widgets.FUENTE_PRINCIPAL, 13),bg=Widgets.COLOR_FONDO).grid(column=0,row=0,padx=3)
+                textoCodRadio = StringVar()
+                textoCodRadio.set(transportista[2]+": "+transportista[3])
+                radioElegido = Label(frameRadio, textvariable=textoCodRadio,font=(Widgets.FUENTE_PRINCIPAL, 13),bg=Widgets.COLOR_FONDO)
+                radioElegido.grid(column=1,row=0)
+                botonCambiar = Widgets.botonMicro(frameRadio,"Cambiar",lambda: self.cambiarValorRadio(frameRadio,radioElegido,textoCodRadio,botonCambiar,transportista))
+                botonCambiar.grid(row=0,column=2,sticky=W,padx=10)
+        except:
+            messagebox.showinfo(message="Error al conectarse a la base datos")
 
     def cambiarValorRadio(self,contenedor, radioElegido,textoVariable,botonCambiar,transportista):
         radios = BaseDatos.obtenerRadios()
@@ -756,11 +744,6 @@ class Ventana(Tk):
 
     def nuevoRechazado(self):
         self.marcadorRechazados.set(str(self.recepcion.rechazados))
-
-    def enterPricipal(self,event,entradaQR):
-        nroTransportista = entradaQR.get()
-        entradaQR.delete(0, 'end')
-        self.validarTransportista(nroTransportista)
     
     def lanzarVentanaTapas(self):
         ancho = 450
@@ -973,10 +956,46 @@ class VentanaFinalizarRecepcion(Widgets.VentanaHija):
         botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
         
     def finalizarCargaRecepcion(self):
+        
         BaseDatos.generarRecepcion(self.ventanaMadre.recepcion)
-        Recursos.imprimirTicket(self.ventanaMadre.recepcion)
-        self.ventanaMadre.pantallaInicial()
+        
+        if not Recursos.imprimirTicket(self.ventanaMadre.recepcion):
+            ancho = 450
+            alto = 230
+            VentanaErrorTicket(self.ventanaMadre,ancho,alto,"Error al imprimir el ticket",self.ventanaMadre.recepcion)
+        else:
+            self.ventanaMadre.pantallaInicial()
+
+        self.ventana.destroy()              
+
+class VentanaErrorTicket(Widgets.VentanaHija):
+    def __init__(self,ventanaMadre,ancho,alto,titulo,recepcion):
+        Widgets.VentanaHija.__init__(self,ventanaMadre,ancho,alto,titulo)
+
+        Widgets.igualarColumnas(self.contenedor,2)
+
+        Label(self.contenedor, text = "Ocurrió un error al imprimir el ticket.",font=(Widgets.FUENTE_PRINCIPAL, 12),bg='white').grid(row=1,column=0,columnspan=2,sticky=EW,pady=(30,20))
+        Label(self.contenedor, text = "¿Desea intentar imprimirlo nuevamente?",font=(Widgets.FUENTE_PRINCIPAL, 12),bg='white').grid(row=2,column=0,columnspan=2,sticky=EW,pady=(10,20))
+
+        #Botones
+        botonCancelar = Widgets.botonSecundario(self.frameInferior,'Seguir sin Ticket',self.sinTicket)
+        botonCancelar.pack(side=LEFT, anchor=SW,pady=10,padx=(10,0))
+        botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Reimprimir Ticket',lambda: self.reimprimirTicket(recepcion))
+        botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
+    
+    def reimprimirTicket(self,recepcion):
+        if not Recursos.imprimirTicket(recepcion):
+            ancho = 450
+            alto = 230
+            VentanaErrorTicket(self.ventanaMadre,ancho,alto,"Error al imprimir el ticket",recepcion)
+        else:
+            self.ventanaMadre.pantallaInicial()
+            
+        self.ventana.destroy()  
+
+    def sinTicket(self):
         self.ventana.destroy()
+        self.ventanaMadre.pantallaInicial()
 
 class VentanaRecepciones(Widgets.VentanaHija):
     def __init__(self,ventanaMadre,ancho,alto,titulo,fechaD,fechaH,radio,transp,empresa,estado):
