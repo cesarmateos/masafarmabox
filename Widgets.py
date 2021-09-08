@@ -29,11 +29,11 @@ def linea(contenedor, ancho, fila, cantidadColumnas, **kwargs):
     return retorno
 
 def botonPrincipal(contenedor, texto,command):
-    retorno = Btn(contenedor, text=texto,imagenNormal='BotonMini.png', wraplength=150, justify=CENTER, imagenHover='BotonMiniHover.png',command=command) 
+    retorno = Btn(contenedor, text=texto,imagenNormal='BotonPrincipal.png', wraplength=130, justify=CENTER, imagenHover='BotonSobre.png',command=command) 
     return retorno
 
 def botonSecundario(contenedor, texto,command):
-    retorno = Btn(contenedor, text=texto,imagenNormal='BotonMiniGris.png', wraplength=180, justify=CENTER, imagenHover='BotonMiniHover.png',command=command) 
+    retorno = Btn(contenedor, text=texto,imagenNormal='BotonSecundario.png', wraplength=130, justify=CENTER, imagenHover='BotonSobre.png',command=command) 
     return retorno
 
 def botonMicro(contenedor, texto, command):
@@ -49,7 +49,7 @@ class Btn(Button):
 
     def __init__(self, root, imagenNormal, imagenHover, *args, **kwargs):
 
-        fuente = tkFont.Font(family=FUENTE_PRINCIPAL, size=12, weight=tkFont.BOLD) 
+        fuente = tkFont.Font(family=FUENTE_PRINCIPAL, size=11, weight=tkFont.BOLD) 
         
         super().__init__(root, fg='white',compound=CENTER,background=COLOR_FONDO,highlightbackground=COLOR_FONDO, font=fuente,highlightthickness=0,borderwidth=0, *args, **kwargs)
 

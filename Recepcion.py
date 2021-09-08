@@ -10,8 +10,20 @@ FB_NO_COINCIDEN = 2
 FB_NO_EXISTE = 3
 FB_REPETIDO = 4
 
+   
+class Transportista:
+    def __init__(self,tuplaTransportistaQuery) -> None:
+        self.numero = tuplaTransportistaQuery[0]
+        self.nombre = tuplaTransportistaQuery[1]
+        self.radio = tuplaTransportistaQuery[2]
+        self.radioDescripcion = tuplaTransportistaQuery[3]
+        self.empresa = tuplaTransportistaQuery[4]
+    def cambiarRadio(self, radio, radioDescripcion):
+        self.radio = radio
+        self.radioDescripcion = radioDescripcion
+
 class Recepcion:
-    def __init__(self,transportista) -> None:
+    def __init__(self,transportista: Transportista) -> None:
         self.transportista = transportista
         self.listaFarmaboxChico = []
         self.listaFarmaboxGrande = []
@@ -50,7 +62,12 @@ class Recepcion:
     def farmaboxRechazado(self,ventana,nroFBA, nroFBB, motivo: int):
         self.rechazados += 1
         ventana.nuevoRechazado()
-        self.listaRechazados.append((nroFBA,nroFBB,motivo))
+        nuevoRegistroRechazo = []
+        nuevoRegistroRechazo.append(nroFBA)
+        nuevoRegistroRechazo.append(nroFBB)
+        nuevoRegistroRechazo.append(motivo)
+        nuevoRegistroRechazo.append(0)
+        self.listaRechazados.append(nuevoRegistroRechazo)
         hilo = Thread(target=self.sonido)
         hilo.daemon = True
         hilo.start()
@@ -84,5 +101,3 @@ class Recepcion:
     def sonido(self):
         Beep(900,100)
         Beep(700,400)
-
-   

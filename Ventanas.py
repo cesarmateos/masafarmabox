@@ -125,7 +125,7 @@ class Ventana(Tk):
         botonConfiguración = Widgets.botonPrincipal(self.frameInferior,'Configuración',self.pantallaConfiguracion)
         botonConfiguración.pack(side=LEFT, anchor=SW)
 
-    def pantallaCargaRecepcion(self,recepcion):
+    def pantallaCargaRecepcion(self,recepcion : Recepcion.Recepcion):
         self.pantalla = 2
 
         #Limpio pantalla de widgets anteriores
@@ -138,8 +138,8 @@ class Ventana(Tk):
         self.recepcion = recepcion
 
         #Genero Encabezado
-        self.encabezado.set(recepcion.transportista[1]+ " - "+ recepcion.transportista[4])
-        self.subtitulo.set("Radio : " +recepcion.transportista[2]+"  ("+recepcion.transportista[3]+")")
+        self.encabezado.set(recepcion.transportista.nombre+ " - "+ recepcion.transportista.empresa)
+        self.subtitulo.set("Radio : " +recepcion.transportista.radio+"  ("+recepcion.transportista.radioDescripcion+")")
 
         #Creo los 3 frames
         frameTitulos = Frame(contenedorGeneral,height=self.altoFrameTitulos,background=Widgets.COLOR_FONDO)
@@ -239,21 +239,26 @@ class Ventana(Tk):
         Widgets.linea(frameTotales,anchoLinea,2,8) 
         
         #-------------FRAME INFERIOR------------
+        margenX = 13
         #Boton Cancelar
         botonCancelar = Widgets.botonSecundario(self.frameInferior,'Cancelar',self.lanzarVentanaCancelaRecepcion)
-        botonCancelar.grid(row=3,column=0,columnspan=2,sticky=W)
+        botonCancelar.grid(row=3,column=0,sticky=EW,padx=(0,margenX))
 
         #Boton Tapas
         botonTapas = Widgets.botonPrincipal(self.frameInferior,'Ingresar Tapas',self.lanzarVentanaTapas)         
-        botonTapas.grid(row=3,column=2,columnspan=2,sticky=EW,padx=13)
+        botonTapas.grid(row=3,column=1,sticky=EW,padx=margenX)
 
         #Boton Farmabox   
         botonFarmabox = Widgets.botonPrincipal(self.frameInferior,'Ingresar Farmabox',self.lanzarVentanaFarmabox)       
-        botonFarmabox.grid(row=3,column=4,columnspan=2,sticky=EW,padx=(0,13))
+        botonFarmabox.grid(row=3,column=2,sticky=EW,padx=margenX)
+
+        #Boton Ver Rechazados
+        botonRechazados = Widgets.botonPrincipal(self.frameInferior,'Ver Rechazados',lambda : self.lanzarVentanaRechazados(recepcion))       
+        botonRechazados.grid(row=3,column=3,sticky=EW,padx=margenX)
 
         #Boton Finalizar
         botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Finalizar',self.lanzarVentanaFinalizarCarga)         
-        botonFinalizar.grid(row=3,column=6,columnspan=2,sticky=E)
+        botonFinalizar.grid(row=3,column=4,sticky=EW,padx=(margenX,0))
      
     def pantallaConsultas(self):
 
@@ -413,7 +418,7 @@ class Ventana(Tk):
         nroRecepcionRechazados.bind('<Return>',lambda event: VentanRechazados(self,780,600,"Consulta Rechazos",fechaRechazDesde.get(),fechaRechazHasta.get(),(listaRechazados.current(),motivosRechazo),nroRecepcionRechazados.get()))
         
         #Buscar
-        botonBuscarRechazo = Widgets.botonMicro(seccionRechazados.contenido,"Buscar",lambda: VentanRechazados(self,780,600,"Consulta Rechazos",fechaRechazDesde.get(),fechaRechazHasta.get(),(listaRechazados.current(),motivosRechazo),nroRecepcionRechazados.get()))
+        botonBuscarRechazo = Widgets.botonMicro(seccionRechazados.contenido,"Buscar",lambda: VentanRechazados(self,760,600,"Consulta Rechazos",fechaRechazDesde.get(),fechaRechazHasta.get(),(listaRechazados.current(),motivosRechazo),nroRecepcionRechazados.get()))
         botonBuscarRechazo.grid(row=4,column=3,columnspan=3,sticky=E,pady=(margenY,0))  
 
         
@@ -544,7 +549,7 @@ class Ventana(Tk):
 
         #Tolerancia
         valoresTolerancia = []
-        for i in range (1,11):
+        for i in range (1,20):
             valoresTolerancia.append(str(round(i*0.05,2)))
 
         Label(seccionSincro.contenido, text="Tolerancia (segundos): ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),row=0,column=0,sticky=W)
@@ -677,10 +682,14 @@ class Ventana(Tk):
 
         try:
             tuplaResultadoQuery = BaseDatos.encontrarTransportista(nroTransportista)
+        except:
+            messagebox.showinfo(message="Error al conectarse a la base datos")
+        else:
             if (tuplaResultadoQuery == None):
                 messagebox.showinfo(message="El transportista "+str(nroTransportista)+" no existe", title="Transportista no encontrado")
             else:
-                transportista = list(tuplaResultadoQuery)
+                #transportista = list(tuplaResultadoQuery)
+                transportista = Recepcion.Transportista(tuplaResultadoQuery)
                 self.limpiarFrame()
 
                 #--Frame Inferior--
@@ -690,20 +699,18 @@ class Ventana(Tk):
                 botonFinalizar.pack(side=RIGHT, anchor=SE)
 
                 #--Frame Medio--
-                Label(self.contenedor, text=transportista[1]+" - "+transportista[4],font=(Widgets.FUENTE_PRINCIPAL, 20),bg=Widgets.COLOR_FONDO).pack(anchor=CENTER,side=TOP,pady=(180,20))
+                Label(self.contenedor, text=transportista.nombre+" - "+transportista.empresa,font=(Widgets.FUENTE_PRINCIPAL, 20),bg=Widgets.COLOR_FONDO).pack(anchor=CENTER,side=TOP,pady=(180,20))
                 frameRadio = Frame(self.contenedor,background=Widgets.COLOR_FONDO)
                 frameRadio.pack(anchor=CENTER,side=TOP)
                 Label(frameRadio, text="Radio",font=(Widgets.FUENTE_PRINCIPAL, 13),bg=Widgets.COLOR_FONDO).grid(column=0,row=0,padx=3)
                 textoCodRadio = StringVar()
-                textoCodRadio.set(transportista[2]+": "+transportista[3])
+                textoCodRadio.set(transportista.radio+": "+transportista.radioDescripcion)
                 radioElegido = Label(frameRadio, textvariable=textoCodRadio,font=(Widgets.FUENTE_PRINCIPAL, 13),bg=Widgets.COLOR_FONDO)
                 radioElegido.grid(column=1,row=0)
                 botonCambiar = Widgets.botonMicro(frameRadio,"Cambiar",lambda: self.cambiarValorRadio(frameRadio,radioElegido,textoCodRadio,botonCambiar,transportista))
                 botonCambiar.grid(row=0,column=2,sticky=W,padx=10)
-        except:
-            messagebox.showinfo(message="Error al conectarse a la base datos")
 
-    def cambiarValorRadio(self,contenedor, radioElegido,textoVariable,botonCambiar,transportista):
+    def cambiarValorRadio(self,contenedor, radioElegido,textoVariable,botonCambiar,transportista : Recepcion.Transportista):
         radios = BaseDatos.obtenerRadios()
         valores = [valores[0]+" - "+valores[1] for valores in radios]
         radioElegido.grid_remove()
@@ -714,13 +721,12 @@ class Ventana(Tk):
         botonGuardar = Widgets.botonMicro(contenedor,"Guardar",lambda: self.guardarCambiosRadio(botonGuardar,botonCambiar,radioElegido,textoVariable,lista,radios,transportista))
         botonGuardar.grid(row=0,column=2,sticky=W,padx=10)    
         
-    def guardarCambiosRadio(self,botonGuardar,botonCambiar,radioElegido,textoVariable,lista,radios,transportista):
+    def guardarCambiosRadio(self,botonGuardar,botonCambiar,radioElegido,textoVariable,lista,radios,transportista : Recepcion.Transportista):
         radioElegido.grid()
         botonCambiar.grid()
         botonGuardar.destroy()
         dato = str(lista.get())
-        transportista[2] = radios[lista.current()][0]
-        transportista[3] = radios[lista.current()][1]
+        transportista.cambiarRadio(radios[lista.current()][0],radios[lista.current()][1])
         lista.destroy()
         textoVariable.set(dato)
 
@@ -746,12 +752,12 @@ class Ventana(Tk):
         self.marcadorRechazados.set(str(self.recepcion.rechazados))
     
     def lanzarVentanaTapas(self):
-        ancho = 450
+        ancho = 400
         alto = 170
         VentanaTapas(self,ancho,alto,"Ingreso Tapas")
 
     def lanzarVentanaFarmabox(self):
-        ancho = 460
+        ancho = 440
         alto = 300
         VentanaFarmabox(self,ancho,alto,"Carga Manul de Farmabox")
 
@@ -764,6 +770,11 @@ class Ventana(Tk):
         ancho = 450
         alto = 245
         VentanaFinalizarRecepcion(self,ancho,alto,"Finalizar Carga")
+
+    def lanzarVentanaRechazados(self,recepcion):
+        ancho = 440
+        alto = 300
+        VentanCargaRechazados(self,ancho,alto,"Rechazados",recepcion.listaRechazados)
 
     def reiniciar(self):
         os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
@@ -807,15 +818,16 @@ class Ventana(Tk):
         estilo.map('TCombobox', selectbackground=[('readonly', 'white')])
         estilo.map('TCombobox', selectforeground=[('readonly', 'black')])  
 
-    def agregarEmpresa(nombreEmpresa):
-        pass
+    def agregarEmpresa(self,nombreEmpresa):
+        texto = []
+        texto.append("Nombre Empresa : "+ nombreEmpresa)
+        VentanaAdvierteGuardado(self,600,300,"Guardando...",texto,lambda:BaseDatos.agregarEmpresa(nombreEmpresa))
 
     def agregarRadio(codigo,descipcion):
         pass
 
     def agregarTransportista(codigo,nombre,radio,empresa):
         pass
-
 
 class VentanaTapas(Widgets.VentanaHija):
     def __init__(self,ventanaMadre,ancho,alto,titulo):
@@ -825,7 +837,7 @@ class VentanaTapas(Widgets.VentanaHija):
         Label(self.contenedor, text = "Cantidad de tapas:",font=(Widgets.FUENTE_PRINCIPAL, 15),bg='white').grid(row=1,column=0,pady=28,padx=15,sticky=E)
 
         #Entrada de Texto
-        self.entradaTapas = Entry(self.contenedor, font=(Widgets.FUENTE_PRINCIPAL,15), width=15,highlightthickness=2)
+        self.entradaTapas = Entry(self.contenedor, font=(Widgets.FUENTE_PRINCIPAL,15), width=11,highlightthickness=2)
         self.entradaTapas.focus_set()
         self.entradaTapas.grid(row=1,column=1,sticky=W)
         
@@ -944,7 +956,7 @@ class VentanaFinalizarRecepcion(Widgets.VentanaHija):
         Label(self.contenedor, text = "Tapas: ",font=(Widgets.FUENTE_PRINCIPAL, 12),bg='white').grid(row=5,column=0,sticky=E)
 
         #Texto Dinámico
-        Label(self.contenedor, text=self.ventanaMadre.recepcion.transportista[1],font=(Widgets.FUENTE_PRINCIPAL, 12),background='white').grid(row=2,column=1,sticky=W,padx=10)
+        Label(self.contenedor, text=self.ventanaMadre.recepcion.transportista.nombre,font=(Widgets.FUENTE_PRINCIPAL, 12),background='white').grid(row=2,column=1,sticky=W,padx=10)
         Label(self.contenedor, text=self.ventanaMadre.recepcion.cantidadChicos(),font=(Widgets.FUENTE_PRINCIPAL, 12),bg='white').grid(row=3,column=1,sticky=W,padx=10)
         Label(self.contenedor, text=self.ventanaMadre.recepcion.cantidadGrandes(),font=(Widgets.FUENTE_PRINCIPAL, 12),bg='white').grid(row=4,column=1,sticky=W,padx=10)
         Label(self.contenedor, text=self.ventanaMadre.recepcion.tapas,font=(Widgets.FUENTE_PRINCIPAL, 12),bg='white').grid(row=5,column=1,sticky=W,padx=10)
@@ -1145,10 +1157,6 @@ class VentanaDetalleRecepcion(Widgets.VentanaHija):
         frameTabla.pack(side = TOP, fill = BOTH, expand = TRUE, padx=Widgets.MARGEN_X)
         frameTabla.propagate(False)
 
-        estilo = Style()
-        estilo.theme_use('clam')
-        estilo.configure('Treeview.Heading', background=Widgets.COLOR_NARANJA_SUAVE,relief="groove",justify=CENTER)
-
         self.tabla = Treeview(frameTabla, column=("#1","#2"), show='headings',height=21,selectmode=BROWSE)
         self.tabla.pack(side=LEFT)
 
@@ -1276,10 +1284,6 @@ class VentanaKardexFarmabox(Widgets.VentanaHija):
         frameTabla = Frame(self.contenedor,bg=Widgets.COLOR_FONDO,height=self.altoContenedor-altoTop) 
         frameTabla.pack(side = BOTTOM, fill = BOTH, expand = TRUE, padx=Widgets.MARGEN_X)
         frameTabla.propagate(False)
-
-        estilo = Style()
-        estilo.theme_use('clam')
-        estilo.configure('Treeview.Heading', background=Widgets.COLOR_NARANJA_SUAVE,relief="groove",justify=CENTER)
 
         self.tabla = Treeview(frameTabla, column=("#1", "#2", "#3","#4","#5"), show='headings',height=21,selectmode=BROWSE)
         self.tabla.pack(side=LEFT)
@@ -1539,3 +1543,88 @@ class VentanaDetallesModificacion(Widgets.VentanaHija):
         item = self.tabla.selection()[0]
         nroFarmabox =  self.tabla.item(item,"values")[0]
         self.ventanaMadre.buscarFarmabox(nroFarmabox,'','')
+
+class VentanCargaRechazados(Widgets.VentanaHija):
+    def __init__(self,ventanaMadre,ancho,alto,titulo,listaRechazados):
+
+        Widgets.VentanaHija.__init__(self,ventanaMadre,ancho,alto,titulo)
+
+        self.listaRechazados = listaRechazados
+
+        self.tabla = Treeview(self.contenedor, column=("#1", "#2", "#3", "#4"), show='headings',height=21,selectmode=BROWSE)
+        self.tabla.pack(side=LEFT)
+
+        self.tabla.bind("<Double-1>", self.OnDoubleClick)
+
+        self.tabla.column("#1", anchor=CENTER, width=80)
+        self.tabla.heading("#1", text="Lectura 1")
+        self.tabla.column("#2", anchor=CENTER, width=80)
+        self.tabla.heading("#2", text="Lectura 2")
+        self.tabla.column("#3", anchor=CENTER, width=120)
+        self.tabla.heading("#3", text="Estado")
+        self.tabla.column("#4", anchor=CENTER, width=140)
+        self.tabla.heading("#4", text="Motivo Rechazo")
+
+        scrollbar = Scrollbar(self.contenedor, orient=VERTICAL)
+        scrollbar.pack(side=RIGHT, fill=Y)
+
+        self.tabla.config(yscrollcommand=scrollbar.set)
+        scrollbar.config(command=self.tabla.yview)
+
+        for row in self.listaRechazados:
+            estado = 'NO AGREGABLE'
+            motivo = ''
+            if row[2] == 1:
+                motivo = 'Dato Nulo'            
+                estado = 'AGREGAR'
+                if(row[3]==1):
+                    estado = 'AGREGADO'
+            if row[2] == 2:
+                motivo = 'No Coinciden'
+            if row[2] == 3:
+                motivo = 'No Existe'
+            if row[2] == 4:
+                motivo = 'Repetido'
+
+            self.tabla.insert("", END, values=(row[0],row[1],estado,motivo)  )
+
+        #Botones
+        botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Cerrar',self.ventana.destroy)
+        botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
+
+    def OnDoubleClick(self, event):
+        lineaElegida = self.tabla.focus()
+        datosLinea = self.tabla.item(lineaElegida,"values")
+        estado = datosLinea[2]
+        if estado == "AGREGAR":
+            #Obtengo Nro Farmabox
+            nroFB = datosLinea[0]
+            #Obtengo Indice de línea seleccionada
+            index = self.tabla.index(lineaElegida)
+            #Agrego el farmabox a la Recepción
+            self.ventanaMadre.recepcion.agregarFarmabox(self.ventanaMadre,nroFB,nroFB)
+            #Cambio el estado en la lista de Rechazados a AGREGADO
+            self.listaRechazados[index][3] = 1
+            #Muestro en Pantalla que el farmabox fue agregado
+            self.tabla.item(lineaElegida,values=(nroFB, datosLinea[1],'AGREGADO',datosLinea[3]))
+
+class VentanaAdvierteGuardado(Widgets.VentanaHija):
+    def __init__(self,ventanaMadre,ancho,alto, titulo, datosAGuardar,command):
+
+        Widgets.VentanaHija.__init__(self,ventanaMadre,ancho,alto,titulo)
+
+
+        #Texto
+        Label(self.contenedor, text = "¿Está seguro que quiere agregar los siguientes elementos a la base?",font=(Widgets.FUENTE_PRINCIPAL, 15),bg='white').grid(row=0,column=0,pady=28,padx=15,sticky=EW)
+        
+        row = 1
+        for dato in datosAGuardar:
+            Label(self.contenedor, text = dato,font=(Widgets.FUENTE_PRINCIPAL, 12),bg='white').grid(row=row,column=0,pady=5,padx=15,sticky=W)
+            row += 1
+
+        #Botones
+        botonCancelar = Widgets.botonSecundario(self.frameInferior,'Cancelar',self.ventana.destroy)
+        botonCancelar.pack(side=LEFT, anchor=SW,pady=10,padx=(10,0))
+        botonFinalizar =  Widgets.botonPrincipal(self.frameInferior,'Guardar',command)
+        botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
+

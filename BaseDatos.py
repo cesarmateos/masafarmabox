@@ -39,8 +39,8 @@ def generarRecepcion(recepcion):
         cursor = conexion.cursor()
 
         #Obtengo datos de la recepcion
-        nroTransportista = recepcion.transportista[0]
-        codRadio = recepcion.transportista[2]
+        nroTransportista = recepcion.transportista.numero
+        codRadio = recepcion.transportista.radio
         listaChicos = recepcion.listaFarmaboxChico
         listaGrandes = recepcion.listaFarmaboxGrande
         listaRechazados = recepcion.listaRechazados
@@ -75,8 +75,8 @@ def generarRecepcion(recepcion):
             cursor.execute(querySQL,(cubeta,idGenerado))
 
         for registro in listaRechazados:
-            querySQL = 'INSERT INTO RECHAZOS_X_RECEPCION (NroRecepcion,Lectura1,Lectura2,CodMotivoRechazo) VALUES (?,?,?,?)'
-            cursor.execute(querySQL,(idGenerado,registro[0],registro[1],registro[2]))
+            querySQL = 'INSERT INTO RECHAZOS_X_RECEPCION (NroRecepcion,Lectura1,Lectura2,CodMotivoRechazo, AgregadoDC) VALUES (?,?,?,?,?)'
+            cursor.execute(querySQL,(idGenerado,registro[0],registro[1],registro[2],registro[3]))
 
         conexion.commit()
         cursor.close()
@@ -485,7 +485,13 @@ def buscarRechazos(fechaDesde,fechaHasta,motivo,nroRecepcion):
     return rechazos
 
 def agregarEmpresa(nombreEmpresa):
-    pass
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+    querySQL = 'INSERT INTO EMPRESA (NombreEmpresa) VALUES (?)'
+    cursor.execute(querySQL,nombreEmpresa)
+
+    conexion.commit()
+    cursor.close()
 
 def agregarRadio(codigo,descipcion):
     pass

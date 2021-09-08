@@ -1,6 +1,7 @@
 import os.path
 import ctypes
 import math
+import Recepcion
 from configparser import ConfigParser
 
 
@@ -14,7 +15,7 @@ delayScanner = 0.15
 feed = 350
 backfeed = 200
 
-version = '1.0'
+version = '1.01'
 
 #FUNCIONES
 def leerConfig():
@@ -84,7 +85,7 @@ def esCubetaChica(cubeta):
         return False
     return True
 
-def imprimirTicket(recepcion): 
+def imprimirTicket(recepcion : Recepcion.Recepcion): 
 
     rutaLibreria = rutaArchivo("Libs/TSCLIB.dll")
     if not os.path.exists(rutaLibreria):
@@ -114,10 +115,10 @@ def imprimirTicket(recepcion):
     tsclibrary.sendcommandW("GAP 0,0")
     tsclibrary.sendcommandW("CLS")
     tsclibrary.sendcommandW("BACKFEED "+backfeed)
-    tsclibrary.windowsfontW("10","10","34","0", "0", "0", "Arial",recepcion.transportista[1]+ " - "+ recepcion.transportista[4])
+    tsclibrary.windowsfontW("10","10","34","0", "0", "0", "Arial",recepcion.transportista.nombre+ " - "+ recepcion.transportista.empresa)
     tsclibrary.windowsfontW("590","10","34","0", "0", "0", "Arial","Recep: "+str(recepcion.nroRecepcion).zfill(8))
-    tsclibrary.windowsfontW("10","50","34","0", "0", "0", "Arial",recepcion.transportista[2])
-    tsclibrary.windowsfontW("50","55","26","0", "0", "0", "Arial","("+ recepcion.transportista[3]+")")
+    #tsclibrary.windowsfontW("10","50","34","0", "0", "0", "Arial",recepcion.transportista.radio)
+    #tsclibrary.windowsfontW("50","55","26","0", "0", "0", "Arial","("+ recepcion.transportista.radioDescripcion+")")
     tsclibrary.windowsfontW("545","50","34","0", "0", "0", "Arial",fechaImprimible[0:19])
     tsclibrary.windowsfontW("135","120","50","0", "0", "1", "Arial","Chicos")
     tsclibrary.windowsfontW("540","120","50","0", "0", "1", "Arial","Grandes")
