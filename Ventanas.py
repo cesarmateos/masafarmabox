@@ -108,11 +108,11 @@ class Ventana(Tk):
         entradaQR = Entry(self.contenedor, font=(Widgets.FUENTE_PRINCIPAL,20), width=20,highlightthickness=2)
         entradaQR.focus_set()
         entradaQR.place(x=235,y=250)
-        entradaQR.bind('<Return>',lambda event: self.validarTransportista(entradaQR))
+        entradaQR.bind('<Return>',lambda event: self.recibirTransportistaTexto(entradaQR))
 
         
         #Boton Lupa
-        botonLupa = Widgets.Btn(self.contenedor, imagenNormal='Lupa.png', imagenHover='LupaHover.png', command=lambda: self.validarTransportista(entradaQR))
+        botonLupa = Widgets.Btn(self.contenedor, imagenNormal='Lupa.png', imagenHover='LupaHover.png', command=lambda: self.recibirTransportistaTexto(entradaQR))
         botonLupa.place(x=600,y=245) 
 
 
@@ -676,10 +676,12 @@ class Ventana(Tk):
         textoVariable.set(dato)
         Recursos.modificarConfig(grupo,item,dato)
    
-    def validarTransportista(self,entradaQR):
+    def recibirTransportistaTexto(self,entradaQR):
         nroTransportista = entradaQR.get()
         entradaQR.delete(0, 'end')
+        self.validarTransportista(nroTransportista)
 
+    def validarTransportista(self,nroTransportista):
         try:
             tuplaResultadoQuery = BaseDatos.encontrarTransportista(nroTransportista)
         except:

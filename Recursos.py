@@ -15,7 +15,7 @@ delayScanner = 0.15
 feed = 350
 backfeed = 200
 
-version = '1.01'
+version = '1.03'
 
 #FUNCIONES
 def leerConfig():
