@@ -1,6 +1,7 @@
 import os.path
 import ctypes
 import math
+from tkinter.constants import NONE
 import Recepcion
 from configparser import ConfigParser
 
@@ -15,7 +16,7 @@ delayScanner = 0.15
 feed = 350
 backfeed = 200
 
-version = '1.03'
+version = '1.10'
 
 #FUNCIONES
 def leerConfig():
@@ -85,7 +86,7 @@ def esCubetaChica(cubeta):
         return False
     return True
 
-def imprimirTicket(recepcion : Recepcion.Recepcion): 
+def imprimirTicketOLD(recepcion : Recepcion.Recepcion): 
 
     rutaLibreria = rutaArchivo("Libs/TSCLIB.dll")
     if not os.path.exists(rutaLibreria):
@@ -110,7 +111,7 @@ def imprimirTicket(recepcion : Recepcion.Recepcion):
 
     fechaImprimible = recepcion.fecha
 
-    tsclibrary.setup("SIZE 100 mm, 63 mm")
+    #tsclibrary.setup("SIZE 100 mm, 63 mm")
     tsclibrary.sendcommandW("DIRECTION 1")
     tsclibrary.sendcommandW("GAP 0,0")
     tsclibrary.sendcommandW("CLS")
@@ -147,6 +148,36 @@ def imprimirTicket(recepcion : Recepcion.Recepcion):
     tsclibrary.windowsfontW(str(xChicos1),str(yFarmabox + interlineado*(columnaMasLarga+1)),str(sizeFuenteFB),"0", "0", "0", "Arial","Total Chicos : "+str(recepcion.cantidadChicos()))
     tsclibrary.windowsfontW(str(xChicos1),str(yFarmabox + interlineado*(columnaMasLarga+2)),str(sizeFuenteFB),"0", "0", "0", "Arial","Total Grandes : "+str(recepcion.cantidadGrandes()))
     tsclibrary.windowsfontW(str(xChicos1),str(yFarmabox + interlineado*(columnaMasLarga+3)),str(sizeFuenteFB),"0", "0", "0", "Arial","Tapas : "+str(recepcion.tapas))
+
+    tsclibrary.printlabelW("1","1")
+    tsclibrary.sendcommandW("FEED "+feed)
+    tsclibrary.closeport()
+    return True
+
+def imprimirTicket(recepcion : Recepcion.Recepcion):
+    rutaLibreria = rutaArchivo("Libs/TSCLIB.dll")
+    if not os.path.exists(rutaLibreria):
+        return False
+
+    tsclibrary = ctypes.WinDLL(rutaLibreria); 
+    if tsclibrary.usbportqueryprinter() < 0:
+        return False
+
+    tsclibrary.openportW("USB");
+
+    fechaImprimible = recepcion.fecha
+
+    tsclibrary.sendcommandW("DIRECTION 1")
+    tsclibrary.sendcommandW("GAP 0,0")
+    tsclibrary.sendcommandW("CLS")
+    tsclibrary.sendcommandW("BACKFEED "+backfeed)
+    tsclibrary.windowsfontW("10","10","34","0", "0", "0", "Arial",recepcion.transportista.nombre+ " - "+ recepcion.transportista.empresa)
+    tsclibrary.windowsfontW("590","10","34","0", "0", "0", "Arial","Recep: "+str(recepcion.nroRecepcion).zfill(8))
+    tsclibrary.windowsfontW("545","50","34","0", "0", "0", "Arial",fechaImprimible[0:19])
+
+    tsclibrary.windowsfontW("10","100","45","0", "0", "0", "Arial","Total Chicos : "+str(recepcion.cantidadChicos()))
+    tsclibrary.windowsfontW("10","140","45","0", "0", "0", "Arial","Total Grandes : "+str(recepcion.cantidadGrandes()))
+    tsclibrary.windowsfontW("10","180","45","0", "0", "0", "Arial","Tapas : "+str(recepcion.tapas))
 
     tsclibrary.printlabelW("1","1")
     tsclibrary.sendcommandW("FEED "+feed)

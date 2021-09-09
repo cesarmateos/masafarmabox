@@ -139,7 +139,7 @@ class Ventana(Tk):
 
         #Genero Encabezado
         self.encabezado.set(recepcion.transportista.nombre+ " - "+ recepcion.transportista.empresa)
-        self.subtitulo.set("Radio : " +recepcion.transportista.radio+"  ("+recepcion.transportista.radioDescripcion+")")
+        self.subtitulo.set("Radio : " +recepcion.radio.codigo+"  ("+recepcion.radio.descripcion+")")
 
         #Creo los 3 frames
         frameTitulos = Frame(contenedorGeneral,height=self.altoFrameTitulos,background=Widgets.COLOR_FONDO)
@@ -692,12 +692,13 @@ class Ventana(Tk):
             else:
                 #transportista = list(tuplaResultadoQuery)
                 transportista = Recepcion.Transportista(tuplaResultadoQuery)
+                recepcion = Recepcion.Recepcion(transportista)
                 self.limpiarFrame()
 
                 #--Frame Inferior--
                 botonVolver = Widgets.botonSecundario(self.frameInferior,'Cancelar',lambda: self.pantallaInicial())        
                 botonVolver.pack(side=LEFT, anchor=SW)
-                botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Iniciar Recepción',lambda: self.pantallaCargaRecepcion(Recepcion.Recepcion(transportista)))        
+                botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Iniciar Recepción',lambda: self.pantallaCargaRecepcion(recepcion))        
                 botonFinalizar.pack(side=RIGHT, anchor=SE)
 
                 #--Frame Medio--
@@ -706,13 +707,13 @@ class Ventana(Tk):
                 frameRadio.pack(anchor=CENTER,side=TOP)
                 Label(frameRadio, text="Radio",font=(Widgets.FUENTE_PRINCIPAL, 13),bg=Widgets.COLOR_FONDO).grid(column=0,row=0,padx=3)
                 textoCodRadio = StringVar()
-                textoCodRadio.set(transportista.radio+": "+transportista.radioDescripcion)
+                textoCodRadio.set(transportista.radio.codigo+": "+transportista.radio.descripcion)
                 radioElegido = Label(frameRadio, textvariable=textoCodRadio,font=(Widgets.FUENTE_PRINCIPAL, 13),bg=Widgets.COLOR_FONDO)
                 radioElegido.grid(column=1,row=0)
-                botonCambiar = Widgets.botonMicro(frameRadio,"Cambiar",lambda: self.cambiarValorRadio(frameRadio,radioElegido,textoCodRadio,botonCambiar,transportista))
+                botonCambiar = Widgets.botonMicro(frameRadio,"Cambiar",lambda: self.cambiarValorRadio(frameRadio,radioElegido,textoCodRadio,botonCambiar,recepcion))
                 botonCambiar.grid(row=0,column=2,sticky=W,padx=10)
 
-    def cambiarValorRadio(self,contenedor, radioElegido,textoVariable,botonCambiar,transportista : Recepcion.Transportista):
+    def cambiarValorRadio(self,contenedor, radioElegido,textoVariable,botonCambiar,recepcion : Recepcion.Recepcion):
         radios = BaseDatos.obtenerRadios()
         valores = [valores[0]+" - "+valores[1] for valores in radios]
         radioElegido.grid_remove()
@@ -720,15 +721,15 @@ class Ventana(Tk):
         lista.current(0)
         lista.grid(row=0,column=1,sticky=W)
         botonCambiar.grid_remove()
-        botonGuardar = Widgets.botonMicro(contenedor,"Guardar",lambda: self.guardarCambiosRadio(botonGuardar,botonCambiar,radioElegido,textoVariable,lista,radios,transportista))
+        botonGuardar = Widgets.botonMicro(contenedor,"Guardar",lambda: self.guardarCambiosRadio(botonGuardar,botonCambiar,radioElegido,textoVariable,lista,radios,recepcion))
         botonGuardar.grid(row=0,column=2,sticky=W,padx=10)    
         
-    def guardarCambiosRadio(self,botonGuardar,botonCambiar,radioElegido,textoVariable,lista,radios,transportista : Recepcion.Transportista):
+    def guardarCambiosRadio(self,botonGuardar,botonCambiar,radioElegido,textoVariable,lista,radios,recepcion : Recepcion.Recepcion):
         radioElegido.grid()
         botonCambiar.grid()
         botonGuardar.destroy()
         dato = str(lista.get())
-        transportista.cambiarRadio(radios[lista.current()][0],radios[lista.current()][1])
+        recepcion.radio = Recepcion.Radio(radios[lista.current()][0],radios[lista.current()][1])
         lista.destroy()
         textoVariable.set(dato)
 
@@ -970,15 +971,18 @@ class VentanaFinalizarRecepcion(Widgets.VentanaHija):
         botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
         
     def finalizarCargaRecepcion(self):
-        
-        BaseDatos.generarRecepcion(self.ventanaMadre.recepcion)
-        
-        if not Recursos.imprimirTicket(self.ventanaMadre.recepcion):
-            ancho = 450
-            alto = 230
-            VentanaErrorTicket(self.ventanaMadre,ancho,alto,"Error al imprimir el ticket",self.ventanaMadre.recepcion)
+        try:
+            idRecepcion = BaseDatos.generarRecepcion(self.ventanaMadre.recepcion)     
+        except:
+            messagebox.showinfo(message="Error al conectarse a la base datos")
         else:
-            self.ventanaMadre.pantallaInicial()
+            recepcionGenerada = Recepcion.Recepcion.desdeKey(idRecepcion)
+            if not Recursos.imprimirTicket(recepcionGenerada):
+                ancho = 450
+                alto = 230
+                VentanaErrorTicket(self.ventanaMadre,ancho,alto,"Error al imprimir el ticket",recepcionGenerada)
+            else:
+                self.ventanaMadre.pantallaInicial()
 
         self.ventana.destroy()              
 
@@ -1204,8 +1208,8 @@ class VentanaDetalleRecepcion(Widgets.VentanaHija):
         #Botones
         botonCSV = Widgets.botonPrincipal(self.frameInferior,'Generar CSV',lambda: self.guardarCSV(recepcionConTamanio))
         botonCSV.pack(side=LEFT, anchor=SW,pady=10,padx=(10,0))
-        #botonExcel = Widgets.botonPrincipal(self.frameInferior,'Generar Excel',self.ventana.destroy)
-        #botonExcel.pack(side=LEFT, anchor=CENTER,pady=10,padx=5)
+        botonTicket = Widgets.botonPrincipal(self.frameInferior,'Imprimir Ticket',lambda: self.reimprimirTicket(recepcion))
+        botonTicket.pack(side=LEFT, anchor=CENTER,pady=10,padx=5)
         botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Cerrar',self.ventana.destroy)
         botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
 
@@ -1216,6 +1220,9 @@ class VentanaDetalleRecepcion(Widgets.VentanaHija):
             escritor = csv.writer(archivo,delimiter = ";")
             escritor.writerow(titulos)
             escritor.writerows(recepcion)
+    def reimprimirTicket(self,recepcion):
+        recepcionTicket = Recepcion.Recepcion.desdeKey(recepcion[0][0])
+        Recursos.imprimirTicket(recepcionTicket)
     
     def OnDoubleClick(self, event):
         item = self.tabla.selection()[0]

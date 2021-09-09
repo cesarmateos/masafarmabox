@@ -40,7 +40,7 @@ def generarRecepcion(recepcion):
 
         #Obtengo datos de la recepcion
         nroTransportista = recepcion.transportista.numero
-        codRadio = recepcion.transportista.radio
+        codRadio = recepcion.transportista.radio.codigo
         listaChicos = recepcion.listaFarmaboxChico
         listaGrandes = recepcion.listaFarmaboxGrande
         listaRechazados = recepcion.listaRechazados
@@ -51,20 +51,8 @@ def generarRecepcion(recepcion):
         querySQL = 'INSERT INTO RECEPCION (CodRadio, NroTransportista, FechaRecepcion, Tapas) VALUES (?,?,?,?)'
         cursor.execute(querySQL,(codRadio,nroTransportista,fechaHora,tapas))
         
-
         #Obtengo ID
         idGenerado = cursor.lastrowid
-
-        #Obtengo toda la fila
-        querySQL = 'SELECT * FROM RECEPCION WHERE NroRecepcion=?'
-        resultadoQuery = cursor.execute(querySQL,(idGenerado,))
-        ultimaFila = resultadoQuery.fetchone()
-
-        #Copio los valores de la nueva recepción en la clase
-        recepcion.setNroRecepcion(idGenerado)
-        recepcion.setFecha(ultimaFila[4])
-        recepcion.agregarTapas(ultimaFila[5])
-                
 
         for cubeta in listaChicos:
             querySQL = 'INSERT INTO FB_X_RECEPCION (NroFarmabox, NroRecepcion) VALUES (?,?)'
@@ -163,6 +151,20 @@ def encontrarFarmabox(NroFarmabox):
 
     cursor.close
     return farmabox
+
+def buscarRadio(corRadio):
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+
+    querySQL = ('SELECT CodRadio,DescripcionRadio '
+        'FROM RADIO '
+        'WHERE CodRadio=?')
+    
+    filaRadio = cursor.execute(querySQL,(corRadio,))
+    radio = filaRadio.fetchone()
+
+    cursor.close
+    return radio
 
 def buscarRecepciones(fechaDesde,fechaHasta,radio,transporte,empresa,estado):
     conexion = conectarBase()
@@ -272,6 +274,23 @@ def buscarRecepcion(nroRecepcion):
             'FROM RECEPCION '
             'JOIN TRANSPORTISTA ON TRANSPORTISTA.NroTransportista = RECEPCION.NroTransportista '
             'JOIN EMPRESA ON EMPRESA.CodEmpresa = TRANSPORTISTA.CodEmpresa '
+            'JOIN FB_X_RECEPCION ON FB_X_RECEPCION.NroRecepcion = RECEPCION.NroRecepcion '
+            'WHERE FB_X_RECEPCION.NroRecepcion=?')
+
+        cursor.execute(querySQL,(nroRecepcion,))
+        recepcion = list(cursor.fetchall())
+        cursor.close
+        return recepcion
+    return None
+
+def buscarRecepcionParaArmadoDeClase(nroRecepcion):
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+
+    if nroRecepcion != '':
+        querySQL = ('SELECT '
+            'RECEPCION.NroRecepcion,FechaRecepcion,CodRadio,NroTransportista, FB_X_RECEPCION.NroFarmabox,Tapas '
+            'FROM RECEPCION '
             'JOIN FB_X_RECEPCION ON FB_X_RECEPCION.NroRecepcion = RECEPCION.NroRecepcion '
             'WHERE FB_X_RECEPCION.NroRecepcion=?')
 

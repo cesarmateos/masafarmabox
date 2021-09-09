@@ -15,12 +15,30 @@ class Transportista:
     def __init__(self,tuplaTransportistaQuery) -> None:
         self.numero = tuplaTransportistaQuery[0]
         self.nombre = tuplaTransportistaQuery[1]
-        self.radio = tuplaTransportistaQuery[2]
-        self.radioDescripcion = tuplaTransportistaQuery[3]
+        self.radio = Radio(tuplaTransportistaQuery[2],tuplaTransportistaQuery[3])
         self.empresa = tuplaTransportistaQuery[4]
-    def cambiarRadio(self, radio, radioDescripcion):
-        self.radio = radio
-        self.radioDescripcion = radioDescripcion
+    
+    @classmethod
+    def desdeKey(cls,nroTransportista: int):
+        resultadoQuery = BaseDatos.encontrarTransportista(nroTransportista)
+        return cls(resultadoQuery)
+
+class Radio:
+    def __init__(self,codigo,descripcion):
+        self.codigo = codigo
+        self.descripcion = descripcion
+
+    @classmethod
+    def desdeKey(cls,codigo):
+        resultadoQuery = BaseDatos.buscarRadio(codigo)
+        codigo = resultadoQuery[0][0]
+        descpricion = resultadoQuery[0][1] 
+        return cls(codigo,descpricion)
+    @classmethod
+    def desdeResultadoQuery(cls,resultadoQuery):
+        codigo = resultadoQuery[0][0]
+        descpricion = resultadoQuery[0][1] 
+        return cls(codigo,descpricion)
 
 class Recepcion:
     def __init__(self,transportista: Transportista) -> None:
@@ -30,6 +48,68 @@ class Recepcion:
         self.listaRechazados = []
         self.tapas = 0
         self.rechazados = 0
+        self.nroRecepcion = None
+        self.radio =  transportista.radio
+        self.fecha = None
+
+    @classmethod
+    def desdeKey(cls,nroRecepcion: int):
+        #OJO - NO TIENE EN CUENTA QUE PASA SI LA QUERY ESTA VACIA
+
+        #Obtengo los datos de la recepcion de la base de datos
+        recepcionQuery = BaseDatos.buscarRecepcionParaArmadoDeClase(nroRecepcion)
+
+        #Extraigo el nro Transportista
+        nroTransportista = recepcionQuery[0][3]
+
+        #Instancio el objeto Transportista
+        transportista = Transportista.desdeKey(nroTransportista)
+
+        #Instancio Objeto Recepcion
+        recepcion = cls(transportista)
+    
+        #Lleno los atributos de la Recepción
+        recepcion.nroRecepcion = recepcionQuery[0][0]   
+        recepcion.setFecha(recepcionQuery[0][1])
+        recepcion.radio = Radio.desdeKey(recepcionQuery[0][2])
+        recepcion.tapas = recepcionQuery[0][5]
+        
+        for fila in recepcionQuery:
+            nroFarmabox = fila[4]
+            if Recursos.esCubetaChica(nroFarmabox):
+                recepcion.listaFarmaboxChico.append(nroFarmabox)
+            else:
+                recepcion.listaFarmaboxGrande.append(nroFarmabox)
+
+        return recepcion
+    
+    @classmethod
+    def desdeResultadoQuery(cls,recepcionQuery):
+        #OJO - NO TIENE EN CUENTA QUE PASA SI LA QUERY ESTA VACIA
+
+        #Extraigo el nro Transportista
+        nroTransportista = recepcionQuery[0][3]
+
+        #Instancio el objeto Transportista
+        transportista = Transportista.desdeKey(nroTransportista)
+
+        #Instancio Objeto Recepcion
+        recepcion = cls(transportista)
+    
+        #Lleno los atributos de la Recepción
+        recepcion.nroRecepcion = recepcionQuery[0][0]   
+        recepcion.fecha = recepcionQuery[0][1]
+        recepcion.radio = Radio.desdeKey(recepcionQuery[0][2])
+        recepcion.tapas = recepcionQuery[0][5]
+        
+        for fila in recepcion:
+            nroFarmabox = fila[4]
+            if Recursos.esCubetaChica(nroFarmabox):
+                recepcion.listaFarmaboxChico.append(nroFarmabox)
+            else:
+                recepcion.listaFarmaboxGrande.append(nroFarmabox)
+
+        return recepcion
     
     def agregarFarmabox(self, ventana, dato1,dato2):
         
