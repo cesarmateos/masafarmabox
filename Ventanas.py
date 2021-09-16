@@ -126,7 +126,7 @@ class Ventana(Tk):
         botonConfiguración.pack(side=LEFT, anchor=SW)
         
         #Boton Administración         
-        botonAdministracion = Widgets.botonPrincipal(self.frameInferior,'Administración',self.pantallaAdministracion)
+        botonAdministracion = Widgets.botonPrincipal(self.frameInferior,'Administración',self.lanzarVentanaPass)
         botonAdministracion.pack(side=LEFT, anchor=SW,padx=10)
 
     def pantallaCargaRecepcion(self,recepcion : Recepcion.Recepcion):
@@ -925,6 +925,11 @@ class Ventana(Tk):
         alto = 170
         VentanaTapas(self,ancho,alto,"Ingreso Tapas")
 
+    def lanzarVentanaPass(self):
+        ancho = 400
+        alto = 170
+        VentanaPassword(self,ancho,alto,"Acceso Administración")
+
     def lanzarVentanaFarmabox(self):
         ancho = 440
         alto = 300
@@ -1040,6 +1045,34 @@ class VentanaTapas(Widgets.VentanaHija):
     def cargarTapas(self,event):
         self.ventanaMadre.recepcion.agregarTapas(self.entradaTapas.get())
         self.ventanaMadre.marcadorTapas.set(self.ventanaMadre.recepcion.tapas)
+        self.ventana.destroy()
+
+
+class VentanaPassword(Widgets.VentanaHija):
+    def __init__(self,ventanaMadre,ancho,alto,titulo):
+        Widgets.VentanaHija.__init__(self,ventanaMadre,ancho,alto,titulo)
+
+        #Texto
+        Label(self.contenedor, text = "Contraseña",font=(Widgets.FUENTE_PRINCIPAL, 15),bg='white').grid(row=1,column=0,pady=28,padx=15,sticky=E)
+
+        #Entrada de Texto
+        self.entradaTapas = Entry(self.contenedor, font=(Widgets.FUENTE_PRINCIPAL,15), width=11,highlightthickness=2)
+        self.entradaTapas.focus_set()
+        self.entradaTapas.grid(row=1,column=1,sticky=W)
+        
+        #Botones
+        botonCancelar = Widgets.botonSecundario(self.frameInferior,'Cancelar',self.ventana.destroy)
+        botonCancelar.pack(side=LEFT, anchor=SW,pady=10,padx=(10,0))
+        botonFinalizar =  Widgets.botonPrincipal(self.frameInferior,'Ingresar',lambda: self.evaluarPass(self))
+        botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
+        
+        self.ventana.bind('<Return>', lambda event: self.evaluarPass(self))
+
+    def evaluarPass(self,event):
+        print(self.entradaTapas.get())
+        print(Recursos.contrasena)
+        if(self.entradaTapas.get()==Recursos.contrasena):
+            self.ventanaMadre.pantallaAdministracion()
         self.ventana.destroy()
 
 class VentanaFarmabox(Widgets.VentanaHija):

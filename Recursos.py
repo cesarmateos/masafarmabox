@@ -16,7 +16,8 @@ delayScanner = 0.15
 feed = 350
 backfeed = 200
 
-version = '1.11'
+version = '1.12'
+contrasena = 'boxfarma'
 
 #FUNCIONES
 def leerConfig():
