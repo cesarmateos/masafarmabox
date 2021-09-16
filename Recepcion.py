@@ -17,12 +17,13 @@ class Transportista:
         self.nombre = tuplaTransportistaQuery[1]
         self.radio = Radio(tuplaTransportistaQuery[2],tuplaTransportistaQuery[3])
         self.empresa = tuplaTransportistaQuery[4]
+        self.estado = tuplaTransportistaQuery[5]
     
     @classmethod
     def desdeKey(cls,nroTransportista: int):
         resultadoQuery = BaseDatos.encontrarTransportista(nroTransportista)
         return cls(resultadoQuery)
-
+    
 class Radio:
     def __init__(self,codigo,descripcion):
         self.codigo = codigo

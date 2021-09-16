@@ -25,7 +25,7 @@ COLUMNA_MAX = 4
 def linea(contenedor, ancho, fila, cantidadColumnas, **kwargs):
     retorno = Canvas(contenedor, width=ancho, height=3,bg='white',highlightthickness=0)
     retorno.create_line(0, 1, ancho, 1, **kwargs)
-    retorno.grid(row=fila,column=0,columnspan=cantidadColumnas,sticky=N,pady=(0,0))
+    retorno.grid(row=fila,column=0,columnspan=cantidadColumnas,sticky=NW,pady=0,padx=0)
     return retorno
 
 def botonPrincipal(contenedor, texto,command):
@@ -119,7 +119,6 @@ class Seccion(Frame):
         Label(self, text=titulo,font="Verdana 12 bold",bg=COLOR_MORADO_SUAVE,fg=COLOR_MORADO,anchor=CENTER).grid(row=1,column=0,sticky=EW)
         linea2 = linea(self,ancho,2,1)
         linea2.grid(pady=(0,2))
-        #self.contenido.grid_columnconfigure(0,weight=1)
         self.contenido = Frame(self,width=ancho,background=COLOR_FONDO)
         self.contenido.grid(row=3,column=0,sticky=EW)
 

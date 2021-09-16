@@ -124,6 +124,10 @@ class Ventana(Tk):
         #Boton Configuración       
         botonConfiguración = Widgets.botonPrincipal(self.frameInferior,'Configuración',self.pantallaConfiguracion)
         botonConfiguración.pack(side=LEFT, anchor=SW)
+        
+        #Boton Administración         
+        botonAdministracion = Widgets.botonPrincipal(self.frameInferior,'Administración',self.pantallaAdministracion)
+        botonAdministracion.pack(side=LEFT, anchor=SW,padx=10)
 
     def pantallaCargaRecepcion(self,recepcion : Recepcion.Recepcion):
         self.pantalla = 2
@@ -312,7 +316,7 @@ class Ventana(Tk):
         
         #Transportista
         Label(seccionRecepciones.contenido, text="Transportista",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(row=3,column=0,sticky=E,pady=margenY,padx=(0,4))
-        transportistas = BaseDatos.obtenerTransportistas()
+        transportistas = BaseDatos.obtenerTransportistasActivos()
         transportistas.append((0,"TODOS LOS TRANSPORTISTAS"))
         valoresTransp = [str(valores[0])+" - "+valores[1] for valores in transportistas]
         listaTransp = Combobox(seccionRecepciones.contenido,values=valoresTransp,state='readonly',width=40)
@@ -481,14 +485,11 @@ class Ventana(Tk):
         self.subtitulo.set("Reiniciar luego de efectuar los cambios")
 
 
-
         #-------------FRAME MEDIO------------
-    
         #Armo un Frame con márgenes
         anchoFrame = self.anchoVentana-Widgets.MARGEN_X*2 
         frameMedio = Frame(self.contenedor,height=self.altoFrameMedio,width=anchoFrame,background=Widgets.COLOR_FONDO)
         frameMedio.pack(fill=BOTH,expand=True,padx=Widgets.MARGEN_X,side=TOP)
-
 
         #Valores Puertos COM
         valoresCOM = []
@@ -561,57 +562,9 @@ class Ventana(Tk):
         botonCambiarTolerancia.grid(row=0,column=2,sticky=W)
 
 
-        #--Seccion Base--
-        seccionBase = Widgets.Seccion(frameMedio,"Base de Datos",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
-        seccionBase.grid(row=3,column=0)
-        
-        Label(seccionBase.contenido, text="Nueva Empresa",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,fg=Widgets.COLOR_NARANJA,anchor=W).grid(padx=0,row=0,column=0,columnspan=3,sticky=W)
-        Widgets.linea(seccionBase.contenido,anchoFrame,1,7,fill=Widgets.COLOR_NARANJA)
-        Label(seccionBase.contenido, text="Nombre: ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),pady=(2,0),row=2,column=0,sticky=W)
-        nombreEmpresa = Entry(seccionBase.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=23,highlightthickness=2)
-        nombreEmpresa.grid(padx=5,pady=(2,0),row=2,column=1,columnspan=2,sticky=W)
-        botonGuardarEmpresa = Widgets.botonMicro(seccionBase.contenido,"Agregar", lambda: self.agregarEmpresa(nombreEmpresa.get()))
-        botonGuardarEmpresa.grid(row=2,column=3,pady=(2,0),sticky=W)
-
-        Label(seccionBase.contenido, text="Nuevo Radio",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,fg=Widgets.COLOR_NARANJA,anchor=W).grid(padx=0,pady=(5,0),row=3,column=0,columnspan=3,sticky=W)
-        Widgets.linea(seccionBase.contenido,anchoFrame,4,7,fill=Widgets.COLOR_NARANJA)
-        Label(seccionBase.contenido, text="Código : ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),pady=(2,0),row=5,column=0,sticky=W)
-        nuevoCodRadio = Entry(seccionBase.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=10,highlightthickness=2)
-        nuevoCodRadio.grid(padx=5,row=5,column=1,sticky=W)
-        Label(seccionBase.contenido, text="Descripción: ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),pady=(2,0),row=5,column=2,sticky=W)
-        nuevaDescRadio = Entry(seccionBase.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=15,highlightthickness=2)
-        nuevaDescRadio.grid(padx=5,pady=(2,0),row=5,column=3,sticky=W)
-        botonGardarCodRadio = Widgets.botonMicro(seccionBase.contenido,"Agregar", lambda : self.agregarRadio(nuevoCodRadio.get(),nuevaDescRadio.get()))
-        botonGardarCodRadio.grid(row=5,column=4,pady=(2,0),sticky=W)
-
-        Label(seccionBase.contenido, text="Nuevo Transportista",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,fg=Widgets.COLOR_NARANJA,anchor=W).grid(padx=0,pady=(5,0),row=7,column=0,columnspan=3,sticky=W)
-        Widgets.linea(seccionBase.contenido,anchoFrame,8,7,fill=Widgets.COLOR_NARANJA)
-        Label(seccionBase.contenido, text="Código: ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),pady=(2,0),row=9,column=0,sticky=W)
-        nuevoCodTransportista= Entry(seccionBase.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=10,highlightthickness=2)
-        nuevoCodTransportista.grid(padx=5,pady=(2,0),row=9,column=1,sticky=W)
-        Label(seccionBase.contenido, text="Nombre: ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),pady=(2,0),row=9,column=2,sticky=W)
-        nuevoNomTransportista= Entry(seccionBase.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=29,highlightthickness=2)
-        nuevoNomTransportista.grid(padx=5,pady=(2,0),row=9,column=3,columnspan=2,sticky=W)
-
-        Label(seccionBase.contenido, text="Radio: ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),pady=(2,0),row=9,column=5,sticky=W)
-        radios = BaseDatos.obtenerRadios()
-        valores = [valores[0]+" - "+valores[1] for valores in radios]
-        listaRadios = Combobox(seccionBase.contenido,values=valores,state='readonly',width=40)
-        listaRadios.current(0)
-        listaRadios.grid(row=9,column=6,pady=(2,0),sticky=W)
-        Label(seccionBase.contenido, text="Empresa: ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),row=10,column=0,sticky=W)
-        empresas = BaseDatos.obtenerEmpresas()
-        valoresEmp = [valoresEmp[1] for valoresEmp in empresas]
-        listaEmpresas = Combobox(seccionBase.contenido,values=valoresEmp,state='readonly',width=28)
-        listaEmpresas.current(0)
-        listaEmpresas.grid(row=10,column=1,padx=5,pady=(2,0),columnspan=2,sticky=W)
-        botonGardarEmpresa = Widgets.botonMicro(seccionBase.contenido,"Agregar", lambda : self.agregarTransportista(nuevoNomTransportista.get(),nuevoCodTransportista.get(),(listaRadios.current(),radios),(listaEmpresas.current(),empresas)))
-        botonGardarEmpresa.grid(row=10,column=3,pady=(2,0),sticky=W)
-
-
         #--Seccion Impresora--
         seccionImpresora = Widgets.Seccion(frameMedio,"Impresora",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
-        seccionImpresora.grid(row=4,column=0)
+        seccionImpresora.grid(row=3,column=0)
 
         #Backfeed
         valoresFeed = []
@@ -637,11 +590,132 @@ class Ventana(Tk):
 
 
         #-------------FRAME INFERIOR------------
-        #Boton Recepciones            
+        #Boton Reiniciar            
         botonGuardar = Widgets.botonPrincipal(self.frameInferior,'Reiniciar',self.reiniciar)
         botonGuardar.pack(side=LEFT, anchor=SW)
 
-        #Boton Configuración       
+        #Boton Volver       
+        botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Volver',self.pantallaInicial)
+        botonFinalizar.pack(side=RIGHT, anchor=SE)
+
+    def pantallaAdministracion(self):
+        self.pantalla = 5
+
+        #Limpio pantalla de widgets anteriores
+        self.limpiarFrame()
+
+        #-------------FRAME SUPERIOR------------
+        #Titulo
+        self.encabezado.set("Administración")
+        self.subtitulo.set("")
+
+        #-------------FRAME MEDIO------------
+        #Armo un Frame con márgenes
+        anchoFrame = self.anchoVentana-Widgets.MARGEN_X*2 
+        frameMedio = Frame(self.contenedor,height=self.altoFrameMedio,width=anchoFrame,background=Widgets.COLOR_FONDO)
+        frameMedio.pack(fill=BOTH,expand=True,padx=Widgets.MARGEN_X,side=TOP)
+
+        #--Seccion Agregar--
+        seccionAgregar = Widgets.Seccion(frameMedio,"Agregar Registro",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
+        seccionAgregar.grid(row=0,column=0)
+        
+        Label(seccionAgregar.contenido, text="Nueva Empresa",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,fg=Widgets.COLOR_NARANJA,anchor=W).grid(padx=0,row=0,column=0,columnspan=3,sticky=W)
+        Widgets.linea(seccionAgregar.contenido,anchoFrame,1,7,fill=Widgets.COLOR_NARANJA)
+        Label(seccionAgregar.contenido, text="Nombre: ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),pady=(2,0),row=2,column=0,sticky=W)
+        nombreEmpresa = Entry(seccionAgregar.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=23,highlightthickness=2)
+        nombreEmpresa.grid(padx=5,pady=(2,0),row=2,column=1,columnspan=2,sticky=W)
+        nombreEmpresa.bind('<Return>', lambda event: self.agregarEmpresa(nombreEmpresa.get()))
+        botonGuardarEmpresa = Widgets.botonMicro(seccionAgregar.contenido,"Agregar", lambda: self.agregarEmpresa(nombreEmpresa.get()))
+        botonGuardarEmpresa.grid(row=2,column=3,pady=(2,0),sticky=W)
+
+        Label(seccionAgregar.contenido, text="Nuevo Radio",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,fg=Widgets.COLOR_NARANJA,anchor=W).grid(padx=0,pady=(5,0),row=3,column=0,columnspan=3,sticky=W)
+        Widgets.linea(seccionAgregar.contenido,anchoFrame,4,7,fill=Widgets.COLOR_NARANJA)
+        Label(seccionAgregar.contenido, text="Código : ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),pady=(2,0),row=5,column=0,sticky=W)
+        nuevoCodRadio = Entry(seccionAgregar.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=10,highlightthickness=2)
+        nuevoCodRadio.grid(padx=5,row=5,column=1,sticky=W)
+        Label(seccionAgregar.contenido, text="Descripción: ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),pady=(2,0),row=5,column=2,sticky=W)
+        nuevaDescRadio = Entry(seccionAgregar.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=25,highlightthickness=2)
+        nuevaDescRadio.grid(padx=5,pady=(2,0),row=5,column=3,columnspan=2,sticky=W)
+        botonGardarCodRadio = Widgets.botonMicro(seccionAgregar.contenido,"Agregar", lambda : self.agregarRadio(nuevoCodRadio.get(),nuevaDescRadio.get()))
+        botonGardarCodRadio.grid(row=5,column=5,pady=(2,0),columnspan=2,sticky=W)
+
+        Label(seccionAgregar.contenido, text="Nuevo Transportista",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,fg=Widgets.COLOR_NARANJA,anchor=W).grid(padx=0,pady=(5,0),row=7,column=0,columnspan=3,sticky=W)
+        Widgets.linea(seccionAgregar.contenido,anchoFrame,8,7,fill=Widgets.COLOR_NARANJA)
+        Label(seccionAgregar.contenido, text="Código: ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),pady=(2,0),row=9,column=0,sticky=W)
+        nuevoCodTransportista= Entry(seccionAgregar.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=10,highlightthickness=2)
+        nuevoCodTransportista.grid(padx=5,pady=(2,0),row=9,column=1,sticky=W)
+        Label(seccionAgregar.contenido, text="Nombre: ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),pady=(2,0),row=9,column=2,sticky=W)
+        nuevoNomTransportista= Entry(seccionAgregar.contenido, font=(Widgets.FUENTE_PRINCIPAL,10), width=25,highlightthickness=2)
+        nuevoNomTransportista.grid(padx=5,pady=(2,0),row=9,column=3,columnspan=2,sticky=W)
+
+        Label(seccionAgregar.contenido, text="Radio: ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),pady=(2,0),row=9,column=5,sticky=W)
+        radios = BaseDatos.obtenerRadios()
+        valores = [valores[0]+" - "+valores[1] for valores in radios]
+        listaRadios = Combobox(seccionAgregar.contenido,values=valores,state='readonly',width=40)
+        listaRadios.current(0)
+        listaRadios.grid(row=9,column=6,pady=(2,0),sticky=W)
+        Label(seccionAgregar.contenido, text="Empresa: ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),row=10,column=0,sticky=W)
+        empresas = BaseDatos.obtenerEmpresas()
+        valoresEmp = [valoresEmp[1] for valoresEmp in empresas]
+        listaEmpresas = Combobox(seccionAgregar.contenido,values=valoresEmp,state='readonly',width=28)
+        listaEmpresas.current(0)
+        listaEmpresas.grid(row=10,column=1,padx=5,pady=(2,0),columnspan=2,sticky=W)
+        botonGuardarTransportista = Widgets.botonMicro(seccionAgregar.contenido,"Agregar", lambda : self.agregarTransportista(nuevoCodTransportista.get(),nuevoNomTransportista.get(),(listaRadios.current(),radios),(listaEmpresas.current(),empresas)))
+        botonGuardarTransportista.grid(row=10,column=3,pady=(2,0),sticky=W)
+
+        #--Seccion Modificar--
+        seccionModificar = Widgets.Seccion(frameMedio,"Modificar Registro",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
+        seccionModificar.grid(row=1,column=0,columnspan=7)
+
+        cantidadColumnasSeccionModificar = 3
+        seccionModificar.contenido.columnconfigure(2,weight=1)
+
+        Label(seccionModificar.contenido, text="Modificar Transportista",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,fg=Widgets.COLOR_NARANJA,anchor=W).grid(pady=(5,0),row=0,column=0,columnspan=cantidadColumnasSeccionModificar,sticky=W)
+        Widgets.linea(seccionModificar.contenido,anchoFrame,1,cantidadColumnasSeccionModificar,fill=Widgets.COLOR_NARANJA)
+        
+        #Transportista
+        Label(seccionModificar.contenido, text="Transportista",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=5,pady=(2,0),row=2,column=0,sticky=W)
+        transportistas = BaseDatos.obtenerTransportistas()
+        listaTransp = Combobox(seccionModificar.contenido,state='readonly',width=30,postcommand=lambda: self.updateListaTransportistas(listaTransp,transportistas))
+        listaTransp.grid(row=2,column=1,sticky=W,pady=(2,0))
+         
+        codigo = StringVar()
+        nombre = StringVar()
+        empresa = StringVar()
+        radio = StringVar()
+        estado = StringVar()
+
+        Label(seccionModificar.contenido, text="Número :",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=5,pady=(2,0),row=3,column=0,sticky=W)
+        Label(seccionModificar.contenido, textvariable=codigo,font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=5,pady=(2,0),row=3,column=1,sticky=W)
+ 
+        Label(seccionModificar.contenido, text="Nombre :",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=5,pady=0,row=4,column=0,sticky=W)
+        Label(seccionModificar.contenido, textvariable=nombre,font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=5,pady=0,row=4,column=1,sticky=W)
+
+        Label(seccionModificar.contenido, text="Empresa :",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=5,pady=0,row=5,column=0,sticky=W)
+        Label(seccionModificar.contenido, textvariable=empresa,font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=5,pady=0,row=5,column=1,sticky=W)
+                
+        Label(seccionModificar.contenido, text="Radio :",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=5,pady=0,row=6,column=0,sticky=W)
+        Label(seccionModificar.contenido, textvariable=radio,font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=5,pady=0,row=6,column=1,sticky=W)
+        
+        Label(seccionModificar.contenido, text="Estado :",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=5,pady=0,row=7,column=0,sticky=W)
+        Label(seccionModificar.contenido, textvariable=estado,font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=5,pady=0,row=7,column=1,sticky=W)
+
+        botonModificarTransportista = Widgets.botonMicro(seccionModificar.contenido,"Modificar", lambda : self.habilitarCambiosTransportista(seccionModificar.contenido,transportistas,listaTransp,botonModificarTransportista))
+        botonModificarTransportista.grid(row=7,column=2,pady=0,sticky=W)
+  
+        #Conecto la selección del combobox con la función que cambia los datos en pantalla según la elección
+        listaTransp.bind('<<ComboboxSelected>>', lambda event :self.cambiarValoresTransportista(codigo,nombre,empresa,radio,estado,transportistas,listaTransp.current()))
+        
+        #--Seccion Procesar Datos--
+        seccionProcesar = Widgets.Seccion(frameMedio,"Procesar Datos",width=self.anchoVentana,bg=Widgets.COLOR_FONDO)
+        seccionProcesar.grid(row=2,column=0)
+
+        Label(seccionProcesar.contenido, text="Procesar Recepciones ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=5,pady=(2,0),row=0,column=0,sticky=W)
+        botonProcesarRecepciones = Widgets.botonMicro(seccionProcesar.contenido,"CSV", self.procesarRecepciones)
+        botonProcesarRecepciones.grid(row=0,column=1,pady=(2,0),sticky=W)
+
+        #-------------FRAME INFERIOR------------
+        #Boton Volver       
         botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Volver',self.pantallaInicial)
         botonFinalizar.pack(side=RIGHT, anchor=SE)
 
@@ -724,7 +798,14 @@ class Ventana(Tk):
         botonGuardar = Widgets.botonMicro(contenedor,"Guardar",lambda: self.guardarCambiosRadio(botonGuardar,botonCambiar,radioElegido,textoVariable,lista,radios,recepcion))
         botonGuardar.grid(row=0,column=2,sticky=W,padx=10)    
         
-    def guardarCambiosRadio(self,botonGuardar,botonCambiar,radioElegido,textoVariable,lista,radios,recepcion : Recepcion.Recepcion):
+    def guardarCambiosRadio(self,
+                    botonGuardar,
+                    botonCambiar,
+                    radioElegido,
+                    textoVariable,
+                    lista,
+                    radios,
+                    recepcion : Recepcion.Recepcion):
         radioElegido.grid()
         botonCambiar.grid()
         botonGuardar.destroy()
@@ -732,6 +813,91 @@ class Ventana(Tk):
         recepcion.radio = Recepcion.Radio(radios[lista.current()][0],radios[lista.current()][1])
         lista.destroy()
         textoVariable.set(dato)
+
+    def updateListaTransportistas(self, lista,transportistas):
+        transportistas = BaseDatos.obtenerTransportistas()
+        valoresTransp = [str(valores[0])+" - "+valores[1] for valores in transportistas]
+        lista['values'] = valoresTransp
+
+    def cambiarValoresTransportista(self,
+                    textoCodigo :StringVar,
+                    textoNombre: StringVar,
+                    textoEmpresa:StringVar,
+                    textoRadio:StringVar,
+                    textoEstado:StringVar,
+                    transportistas,
+                    indice:int):
+        textoCodigo.set(transportistas[indice][0])
+        textoNombre.set(transportistas[indice][1])
+        textoEmpresa.set(transportistas[indice][3])
+        textoRadio.set(transportistas[indice][2])
+        if(transportistas[indice][4]==1):
+            textoEstado.set("Activo")
+        else:
+            textoEstado.set("Inactivo")
+
+    def habilitarCambiosTransportista(self,
+                    contenedor:Frame,
+                    transportistas : list,
+                    listaTransp : Combobox,
+                    boton:Widgets.botonMicro):
+        transportista = Recepcion.Transportista.desdeKey(transportistas[listaTransp.current()][0])
+        boton.grid_remove()
+        listaTransp.grid_remove()
+
+        textoTransporte = Label(contenedor, text=transportista.nombre,font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W)
+        textoTransporte.grid(row=2,column=1,sticky=W,pady=(2,0))
+
+        radios = BaseDatos.obtenerRadios()
+        valores = [valores[0]+" - "+valores[1] for valores in radios]
+        listaRadios = Combobox(contenedor,values=valores,state='readonly',width=40)
+        indexRadioActual = [radio[0] for radio in radios].index(transportista.radio.codigo)
+        listaRadios.current(indexRadioActual)
+        listaRadios.grid(padx=5,pady=0,row=6,column=1,sticky=W)
+
+        listaEstado = Combobox(contenedor,values=("Inactivo","Activo"),state='readonly',width=40)
+        listaEstado.current(transportista.estado)
+        listaEstado.grid(padx=5,pady=0,row=7,column=1,sticky=W)
+
+        botonGuardar = Widgets.botonMicro(contenedor,"Guardar", lambda: self.cambiarTransportista(boton,botonGuardar,listaTransp,transportistas,transportista,textoTransporte,radios,listaRadios,listaEstado))
+        botonGuardar.grid(row=7,column=2,pady=0,sticky=W)
+
+    def cambiarTransportista(self,
+                botonModificar:Widgets.botonMicro,
+                botonGuardar:Widgets.botonMicro,
+                listaTransporte: Combobox,
+                transportistas: list,
+                transportista:Recepcion.Transportista,
+                textoTransporte: Label,
+                radios,
+                listaRadios: Combobox,
+                listaEstado: Combobox):
+
+
+        #Instancio el Radio nuevo
+        radioElegido = Recepcion.Radio(radios[listaRadios.current()][0],radios[listaRadios.current()][1])
+
+        #Modifico los atributos del transportista con los nuevos
+        transportista.estado = listaEstado.current()
+        transportista.radio = radioElegido
+        BaseDatos.modificarTransportista(transportista)
+
+        #Quito del grid los widgets de Guardar
+        botonGuardar.grid_remove()
+        textoTransporte.grid_remove()
+        listaEstado.grid_remove()
+        listaRadios.grid_remove()
+
+        #Quito de la lista de transportistas la tupla(por su inmutabilidad) y genero una nueva y la inserto en el lugar de la anterior
+        indiceTransporteCombobox = listaTransporte.current()
+        registroViejo = transportistas[indiceTransporteCombobox]
+        registroNuevo = (registroViejo[0],registroViejo[1],radios[listaRadios.current()][0],registroViejo[3],listaEstado.current())
+        transportistas.remove(registroViejo)
+        transportistas.insert(indiceTransporteCombobox,registroNuevo)
+
+        #Agrego al grid los Widgets de Modificar
+        botonModificar.grid()
+        listaTransporte.grid()
 
     def nuevoFarmaboxChico(self,nroFB,cantidad):
         cantidadModificada = cantidad -1
@@ -824,13 +990,32 @@ class Ventana(Tk):
     def agregarEmpresa(self,nombreEmpresa):
         texto = []
         texto.append("Nombre Empresa : "+ nombreEmpresa)
-        VentanaAdvierteGuardado(self,600,300,"Guardando...",texto,lambda:BaseDatos.agregarEmpresa(nombreEmpresa))
+        VentanaAdvierteGuardado(self,800,250,"Guardando Nueva Empresa",texto,BaseDatos.agregarEmpresa(nombreEmpresa))
 
-    def agregarRadio(codigo,descipcion):
-        pass
+    def agregarRadio(self,codigo,descipcion):
+        texto = []
+        texto.append("Código Radio: "+ codigo)
+        texto.append("Descipción: "+ descipcion)
+        VentanaAdvierteGuardado(self,800,250,"Guardando Nuevo Radio",texto,BaseDatos.agregarRadio(codigo,descipcion))
 
-    def agregarTransportista(codigo,nombre,radio,empresa):
-        pass
+    def agregarTransportista(self,codigo,nombre,tuplaRadios,tuplaEmpresas):
+        radio = tuplaRadios[1][tuplaEmpresas[0]]
+        empresa = tuplaEmpresas[1][tuplaEmpresas[0]]
+        texto = []
+        texto.append("Número:"+ codigo)
+        texto.append("Nombre: "+ nombre)
+        texto.append("Radio Usual: "+ radio[0])
+        texto.append("Empresa: "+ empresa[1])
+        VentanaAdvierteGuardado(self,800,350,"Guardando Nuevo Transportista",texto,BaseDatos.agregarTransportista(codigo,nombre,radio[0],empresa[0]))
+    
+    def procesarRecepciones(self):
+        farmaboxes = BaseDatos.procesarRecepciones()
+        archivo = filedialog.asksaveasfile(mode ='w',title='Exportar a CSV',filetypes= [("Arhcivo CSV","*.csv")], defaultextension='.csv')
+        titulos = ['Número Farmabox']
+        with open(archivo.name, 'w+', newline ='',) as archivo:    
+            escritor = csv.writer(archivo,delimiter = ";")
+            escritor.writerow(titulos)
+            escritor.writerows(farmaboxes)
 
 class VentanaTapas(Widgets.VentanaHija):
     def __init__(self,ventanaMadre,ancho,alto,titulo):
@@ -1102,8 +1287,8 @@ class VentanaRecepciones(Widgets.VentanaHija):
         #Botones
         botonCSV = Widgets.botonPrincipal(self.frameInferior,'Generar CSV',lambda :self.guardarCSV(recepciones))
         botonCSV.pack(side=LEFT, anchor=SW,pady=10,padx=(10,0))
-        #botonExcel = Widgets.botonPrincipal(self.frameInferior,'Generar Excel',lambda :self.guardarExcel(recepciones))
-        #botonExcel.pack(side=LEFT, anchor=CENTER,pady=10,padx=5)
+        botonRecepcionesConFarmabox = Widgets.botonPrincipal(self.frameInferior,'Generar CSV con Farmabox',lambda :self.generarCSVconFB(recepciones))
+        botonRecepcionesConFarmabox.pack(side=LEFT, anchor=CENTER,pady=10,padx=5)
         botonFinalizar = Widgets.botonPrincipal(self.frameInferior,'Cerrar',self.ventana.destroy)
         botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
 
@@ -1114,6 +1299,15 @@ class VentanaRecepciones(Widgets.VentanaHija):
             escritor = csv.writer(archivo,delimiter = ";")
             escritor.writerow(titulos)
             escritor.writerows(recepciones)
+
+    def generarCSVconFB(self,recepciones):
+        archivo = filedialog.asksaveasfile(mode ='w',title='Exportar a CSV',filetypes= [("Arhcivo CSV","*.csv")], defaultextension='.csv')
+        titulos = ['Número Recepción','Fecha','Radio','Transportista','Empresa','Número Farmabox','Tapas']
+        recepcionesConFB = BaseDatos.agregarFamaboxToRecepciones(recepciones)
+        with open(archivo.name, 'w+', newline ='',) as archivo:    
+            escritor = csv.writer(archivo,delimiter = ";")
+            escritor.writerow(titulos)
+            escritor.writerows(recepcionesConFB)
             
     def OnDoubleClick(self, event):
         item = self.tabla.selection()[0]
@@ -1624,7 +1818,7 @@ class VentanaAdvierteGuardado(Widgets.VentanaHija):
 
 
         #Texto
-        Label(self.contenedor, text = "¿Está seguro que quiere agregar los siguientes elementos a la base?",font=(Widgets.FUENTE_PRINCIPAL, 15),bg='white').grid(row=0,column=0,pady=28,padx=15,sticky=EW)
+        Label(self.contenedor, text = "¿Está seguro que quiere agregar los siguientes elementos a la base?",font=(Widgets.FUENTE_PRINCIPAL, 14),bg='white').grid(row=0,column=0,pady=28,padx=15,sticky=EW)
         
         row = 1
         for dato in datosAGuardar:
@@ -1634,6 +1828,25 @@ class VentanaAdvierteGuardado(Widgets.VentanaHija):
         #Botones
         botonCancelar = Widgets.botonSecundario(self.frameInferior,'Cancelar',self.ventana.destroy)
         botonCancelar.pack(side=LEFT, anchor=SW,pady=10,padx=(10,0))
-        botonFinalizar =  Widgets.botonPrincipal(self.frameInferior,'Guardar',command)
+        botonFinalizar =  Widgets.botonPrincipal(self.frameInferior,'Guardar',lambda: self.guardar(command))
         botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
+
+    def guardar(self, command):
+
+        registro = command
+
+        for widgets in self.contenedor.winfo_children():
+            widgets.destroy()
+        for widgets in self.frameInferior.winfo_children():
+            widgets.destroy()
+
+        if registro is None:
+            Label(self.contenedor, text = "No se pudo guardar el registro",font=(Widgets.FUENTE_PRINCIPAL, 14),bg='white').grid(row=0,column=0,pady=28,padx=15,sticky=EW)
+        else:
+            Label(self.contenedor, text = "Se guardó el registro con el id "+str(registro),font=(Widgets.FUENTE_PRINCIPAL, 13),bg='white').grid(row=0,column=0,pady=28,padx=15,sticky=EW)
+
+        botonFinalizar =  Widgets.botonPrincipal(self.frameInferior,'Cerrar',self.ventana.destroy)
+        botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
+            
+
 

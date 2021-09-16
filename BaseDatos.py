@@ -11,27 +11,6 @@ def conectarBase():
     except sql.Error as error:
         print("Fallo al conectarse a la base datos:", error) 
 
-def encontrarTransportista(nroTransportista):
-    conexion = conectarBase()
-    cursor = conexion.cursor()
-
-    querySQL = ('SELECT NroTransportista, NombreTransportista, CodRadioUsual, DescripcionRadio, NombreEmpresa '
-        'FROM TRANSPORTISTA '
-        'JOIN RADIO ON RADIO.CodRadio = TRANSPORTISTA.CodRadioUsual '
-        'JOIN EMPRESA ON EMPRESA.CodEmpresa = TRANSPORTISTA.CodEmpresa '
-        'WHERE TRANSPORTISTA.NroTransportista=?')
-    
-
-    filaTransportista = cursor.execute(querySQL,(nroTransportista,))
-    transportista = filaTransportista.fetchone()
-
-    if transportista is None:
-        cursor.close
-        return None
-
-    cursor.close
-    return transportista
-
 def generarRecepcion(recepcion):
     try:
         #Conecto y armo cursor
@@ -80,6 +59,33 @@ def generarRecepcion(recepcion):
             conexion.close()
             print("The SQLite connection is closed")
 
+def procesarRecepciones():
+    try:
+        conexion = conectarBase()
+        cursor = conexion.cursor()
+
+        querySQL = ('SELECT NroFarmabox FROM FB_X_RECEPCION '
+            'JOIN RECEPCION ON RECEPCION.NroRecepcion = FB_X_RECEPCION.NroRecepcion '
+            'WHERE RECEPCION.Procesado IS 1')
+
+        cursor.execute(querySQL)
+        noProcesados = list(cursor.fetchall())
+        querySQL = 'UPDATE RECEPCION SET Procesado = 0 WHERE Procesado IS 1'
+        cursor.execute(querySQL)  
+        conexion.commit()
+
+        cursor.close
+        return noProcesados
+
+    except sql.Error as error:
+        print("Fallo al insertar datos de la recepción :", error)
+        return None
+    finally:
+        if conexion:
+            conexion.close()
+    
+
+#Listados Completos
 def obtenerRadios():
     conexion = conectarBase()
     cursor = conexion.cursor()
@@ -95,7 +101,20 @@ def obtenerTransportistas():
     conexion = conectarBase()
     cursor = conexion.cursor()
 
-    querySQL = ('SELECT * FROM TRANSPORTISTA')
+    querySQL = ('SELECT NroTransportista, NombreTransportista, CodRadioUsual,NombreEmpresa,Estado '
+        'FROM TRANSPORTISTA '
+        'JOIN EMPRESA ON TRANSPORTISTA.CodEmpresa = EMPRESA.CodEmpresa')
+
+    cursor.execute(querySQL)
+    transportistas = list(cursor.fetchall())
+    cursor.close
+    return transportistas
+
+def obtenerTransportistasActivos():
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+
+    querySQL = ('SELECT * FROM TRANSPORTISTA WHERE Estado=1')
 
     cursor.execute(querySQL)
     transportistas = list(cursor.fetchall())
@@ -135,37 +154,8 @@ def obtenerMotivosRechazo():
     cursor.close
     return rechazo
 
-def encontrarFarmabox(NroFarmabox):
-    conexion = conectarBase()
-    cursor = conexion.cursor()
 
-    querySQL = ('SELECT * FROM FARMABOX '
-        'WHERE NroFarmabox=?')
-
-    filaFB = cursor.execute(querySQL,(NroFarmabox,))
-    farmabox = filaFB.fetchone()
-
-    if farmabox is None:
-        cursor.close
-        return None
-
-    cursor.close
-    return farmabox
-
-def buscarRadio(corRadio):
-    conexion = conectarBase()
-    cursor = conexion.cursor()
-
-    querySQL = ('SELECT CodRadio,DescripcionRadio '
-        'FROM RADIO '
-        'WHERE CodRadio=?')
-    
-    filaRadio = cursor.execute(querySQL,(corRadio,))
-    radio = filaRadio.fetchone()
-
-    cursor.close
-    return radio
-
+#Multiples Condicionales
 def buscarRecepciones(fechaDesde,fechaHasta,radio,transporte,empresa,estado):
     conexion = conectarBase()
     cursor = conexion.cursor()
@@ -264,175 +254,30 @@ def buscarRecepciones(fechaDesde,fechaHasta,radio,transporte,empresa,estado):
     
     return recepciones
 
-def buscarRecepcion(nroRecepcion):
+def agregarFamaboxToRecepciones(recepciones):
     conexion = conectarBase()
     cursor = conexion.cursor()
 
-    if nroRecepcion != '':
-        querySQL = ('SELECT '
-            'RECEPCION.NroRecepcion,FechaRecepcion,CodRadio,TRANSPORTISTA.NombreTransportista,EMPRESA.NombreEmpresa, FB_X_RECEPCION.NroFarmabox,Tapas,Procesado '
+    argumentosLista = []
+    querySQL = ''
+
+    for indice, recepcion in enumerate(recepciones):
+        if(indice!=0):
+            querySQL += ' UNION '
+        querySQL += ('SELECT RECEPCION.NroRecepcion,FechaRecepcion,CodRadio,TRANSPORTISTA.NombreTransportista,EMPRESA.NombreEmpresa, FB_X_RECEPCION.NroFarmabox,Tapas '
             'FROM RECEPCION '
             'JOIN TRANSPORTISTA ON TRANSPORTISTA.NroTransportista = RECEPCION.NroTransportista '
             'JOIN EMPRESA ON EMPRESA.CodEmpresa = TRANSPORTISTA.CodEmpresa '
             'JOIN FB_X_RECEPCION ON FB_X_RECEPCION.NroRecepcion = RECEPCION.NroRecepcion '
             'WHERE FB_X_RECEPCION.NroRecepcion=?')
-
-        cursor.execute(querySQL,(nroRecepcion,))
-        recepcion = list(cursor.fetchall())
-        cursor.close
-        return recepcion
-    return None
-
-def buscarRecepcionParaArmadoDeClase(nroRecepcion):
-    conexion = conectarBase()
-    cursor = conexion.cursor()
-
-    if nroRecepcion != '':
-        querySQL = ('SELECT '
-            'RECEPCION.NroRecepcion,FechaRecepcion,CodRadio,NroTransportista, FB_X_RECEPCION.NroFarmabox,Tapas '
-            'FROM RECEPCION '
-            'JOIN FB_X_RECEPCION ON FB_X_RECEPCION.NroRecepcion = RECEPCION.NroRecepcion '
-            'WHERE FB_X_RECEPCION.NroRecepcion=?')
-
-        cursor.execute(querySQL,(nroRecepcion,))
-        recepcion = list(cursor.fetchall())
-        cursor.close
-        return recepcion
-    return None
-
-def buscarKardexFarmabox(nroFarmabox,fechaDesde,fechaHasta):
-    conexion = conectarBase()
-    cursor = conexion.cursor()
-
-    argumentosLista = [nroFarmabox]
-    parte2 = parte4 =''
-
+        argumentosLista.append(recepcion[0])
     
-    parte1 = ('SELECT NroFarmabox, FechaModificacion AS Fecha, TIPOS_MODIFICACION.TipoModificacion AS TipoMovimiento, "-" AS Nro_Recepcion,MODIFICACION.NroModificacion, "-" AS CodRadio '
-            'FROM MODIFICACION '
-            'JOIN FB_X_MODIFICACION ON FB_X_MODIFICACION.NroModificacion = MODIFICACION.NroModificacion '
-            'JOIN TIPOS_MODIFICACION ON TIPOS_MODIFICACION.CodTipoModificacion = MODIFICACION.CodTipoModificacion '
-            'WHERE FB_X_MODIFICACION.NroFarmabox = ?')
-    parte3 = ('UNION '
-            'SELECT NroFarmabox, FechaRecepcion AS Fecha, "RECEPCIÓN" AS TipoMovimiento, RECEPCION.NroRecepcion, "-" AS NroModificacion, CodRadio '
-            'FROM RECEPCION '
-            'JOIN FB_X_RECEPCION ON FB_X_RECEPCION.NroRecepcion = RECEPCION.NroRecepcion '
-            'WHERE FB_X_RECEPCION.NroFarmabox = ? ')
-    parte5 ='ORDER BY 2'
-
-    if fechaDesde == '' and fechaHasta =='':
-        argumentosLista.append(nroFarmabox) 
-    else:
-        parte2 = 'AND FechaModificacion BETWEEN ? AND ? '
-        parte4 = 'AND FechaRecepcion BETWEEN ? AND ? '
-        fechaDesdeFormateada = None
-        fechaHastaFormateada = None
-        if fechaDesde != '' and fechaHasta !='':
-            desde = fechaDesde + ' 00:00:00'
-            fechaDesdeFormateada = datetime.strptime(desde, "%d/%m/%y %H:%M:%S")
-            hasta = fechaHasta +' 23:59:59'
-            fechaHastaFormateada = datetime.strptime(hasta, "%d/%m/%y %H:%M:%S")
-        elif fechaDesde != '' and fechaHasta =='':
-            desde = fechaDesde + ' 00:00:00'
-            fechaDesdeFormateada = datetime.strptime(desde, "%d/%m/%y %H:%M:%S")
-            fechaHastaFormateada = datetime.now()
-
-        else:
-            hasta = fechaHasta +' 23:59:59'
-            fechaDesdeFormateada = datetime.strptime('2021/07/22 15:44:23', "%Y/%m/%d %H:%M:%S")
-            fechaHastaFormateada = datetime.strptime(hasta, "%d/%m/%y %H:%M:%S")
-
-        argumentosLista.append(fechaDesdeFormateada)
-        argumentosLista.append(fechaHastaFormateada)
-        argumentosLista.append(nroFarmabox) 
-        argumentosLista.append(fechaDesdeFormateada)
-        argumentosLista.append(fechaHastaFormateada)   
-
-    querySQL = parte1+parte2+parte3+parte4+parte5
-
     argumentos = tuple(argumentosLista)
     cursor.execute(querySQL,(argumentos))
-
-    kardex = list(cursor.fetchall())
-    tuplaBusqueda = (kardex,fechaDesde,fechaHasta)
+    recepcion = list(cursor.fetchall())
     cursor.close
 
-    return tuplaBusqueda
-
-def buscarModificaciones(fechaDesde,fechaHasta,tipo):
-    conexion = conectarBase()
-    cursor = conexion.cursor()
-    argumentosLista = []
-    primero = True
-
-    
-    querySQL = ('SELECT NroModificacion, TipoModificacion, FechaModificacion '
-                'FROM MODIFICACION '
-                'JOIN TIPOS_MODIFICACION ON TIPOS_MODIFICACION.CodTipoModificacion = MODIFICACION.CodTipoModificacion ')
-
-    
-    if fechaDesde == '' and fechaHasta =='':
-        pass
-    else:
-        primero = False
-        querySQL += 'WHERE FechaModificacion BETWEEN ? AND ? '
-        fechaDesdeFormateada = None
-        fechaHastaFormateada = None
-        if fechaDesde != '' and fechaHasta !='':
-            desde = fechaDesde + ' 00:00:00'
-            fechaDesdeFormateada = datetime.strptime(desde, "%d/%m/%y %H:%M:%S")
-            hasta = fechaHasta +' 23:59:59'
-            fechaHastaFormateada = datetime.strptime(hasta, "%d/%m/%y %H:%M:%S")
-        elif fechaDesde != '' and fechaHasta =='':
-            desde = fechaDesde + ' 00:00:00'
-            fechaDesdeFormateada = datetime.strptime(desde, "%d/%m/%y %H:%M:%S")
-            fechaHastaFormateada = datetime.now()
-
-        else:
-            hasta = fechaHasta +' 23:59:59'
-            fechaDesdeFormateada = datetime.strptime('2021/07/22 15:44:23', "%Y/%m/%d %H:%M:%S")
-            fechaHastaFormateada = datetime.strptime(hasta, "%d/%m/%y %H:%M:%S")
-
-        argumentosLista.append(fechaDesdeFormateada)
-        argumentosLista.append(fechaHastaFormateada)   
-
-
-    if tipo == 0:
-        pass
-    else:
-        if primero:
-            querySQL +='WHERE '
-            primero = False 
-        else:
-            querySQL +='AND '
-        querySQL += 'TIPOS_MODIFICACION.CodTipoModificacion=? '
-        argumentosLista.append(tipo)
-
-
-    argumentos = tuple(argumentosLista)
-    cursor.execute(querySQL,(argumentos))
-
-    modificaciones = list(cursor.fetchall())
-    cursor.close
-    
-    return modificaciones
-
-def buscarModificacion(nroModificacion):
-    conexion = conectarBase()
-    cursor = conexion.cursor()
-
-    if nroModificacion != '':
-        querySQL = ('SELECT MODIFICACION.NroModificacion, FechaModificacion,TipoModificacion,NroFarmabox '
-                    'FROM MODIFICACION '
-                    'JOIN TIPOS_MODIFICACION ON TIPOS_MODIFICACION.CodTipoModificacion = MODIFICACION.CodTipoModificacion '
-                    'JOIN FB_X_MODIFICACION ON FB_X_MODIFICACION.NroModificacion = MODIFICACION.NroModificacion '
-                    'WHERE MODIFICACION.NroModificacion=?')
-
-        cursor.execute(querySQL,(nroModificacion,))
-        modificacion = list(cursor.fetchall())
-        cursor.close
-        return modificacion
-    return None
+    return recepcion
 
 def buscarRechazos(fechaDesde,fechaHasta,motivo,nroRecepcion):
     conexion = conectarBase()
@@ -503,21 +348,305 @@ def buscarRechazos(fechaDesde,fechaHasta,motivo,nroRecepcion):
     
     return rechazos
 
-def agregarEmpresa(nombreEmpresa):
+def buscarModificaciones(fechaDesde,fechaHasta,tipo):
     conexion = conectarBase()
     cursor = conexion.cursor()
-    querySQL = 'INSERT INTO EMPRESA (NombreEmpresa) VALUES (?)'
-    cursor.execute(querySQL,nombreEmpresa)
+    argumentosLista = []
+    primero = True
 
-    conexion.commit()
-    cursor.close()
+    
+    querySQL = ('SELECT NroModificacion, TipoModificacion, FechaModificacion '
+                'FROM MODIFICACION '
+                'JOIN TIPOS_MODIFICACION ON TIPOS_MODIFICACION.CodTipoModificacion = MODIFICACION.CodTipoModificacion ')
+
+    
+    if fechaDesde == '' and fechaHasta =='':
+        pass
+    else:
+        primero = False
+        querySQL += 'WHERE FechaModificacion BETWEEN ? AND ? '
+        fechaDesdeFormateada = None
+        fechaHastaFormateada = None
+        if fechaDesde != '' and fechaHasta !='':
+            desde = fechaDesde + ' 00:00:00'
+            fechaDesdeFormateada = datetime.strptime(desde, "%d/%m/%y %H:%M:%S")
+            hasta = fechaHasta +' 23:59:59'
+            fechaHastaFormateada = datetime.strptime(hasta, "%d/%m/%y %H:%M:%S")
+        elif fechaDesde != '' and fechaHasta =='':
+            desde = fechaDesde + ' 00:00:00'
+            fechaDesdeFormateada = datetime.strptime(desde, "%d/%m/%y %H:%M:%S")
+            fechaHastaFormateada = datetime.now()
+
+        else:
+            hasta = fechaHasta +' 23:59:59'
+            fechaDesdeFormateada = datetime.strptime('2021/07/22 15:44:23', "%Y/%m/%d %H:%M:%S")
+            fechaHastaFormateada = datetime.strptime(hasta, "%d/%m/%y %H:%M:%S")
+
+        argumentosLista.append(fechaDesdeFormateada)
+        argumentosLista.append(fechaHastaFormateada)   
+
+
+    if tipo == 0:
+        pass
+    else:
+        if primero:
+            querySQL +='WHERE '
+            primero = False 
+        else:
+            querySQL +='AND '
+        querySQL += 'TIPOS_MODIFICACION.CodTipoModificacion=? '
+        argumentosLista.append(tipo)
+
+
+    argumentos = tuple(argumentosLista)
+    cursor.execute(querySQL,(argumentos))
+
+    modificaciones = list(cursor.fetchall())
+    cursor.close
+    
+    return modificaciones
+
+def buscarKardexFarmabox(nroFarmabox,fechaDesde,fechaHasta):
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+
+    argumentosLista = [nroFarmabox]
+    parte2 = parte4 =''
+
+    
+    parte1 = ('SELECT NroFarmabox, FechaModificacion AS Fecha, TIPOS_MODIFICACION.TipoModificacion AS TipoMovimiento, "-" AS Nro_Recepcion,MODIFICACION.NroModificacion, "-" AS CodRadio '
+            'FROM MODIFICACION '
+            'JOIN FB_X_MODIFICACION ON FB_X_MODIFICACION.NroModificacion = MODIFICACION.NroModificacion '
+            'JOIN TIPOS_MODIFICACION ON TIPOS_MODIFICACION.CodTipoModificacion = MODIFICACION.CodTipoModificacion '
+            'WHERE FB_X_MODIFICACION.NroFarmabox = ?')
+    parte3 = ('UNION '
+            'SELECT NroFarmabox, FechaRecepcion AS Fecha, "RECEPCIÓN" AS TipoMovimiento, RECEPCION.NroRecepcion, "-" AS NroModificacion, CodRadio '
+            'FROM RECEPCION '
+            'JOIN FB_X_RECEPCION ON FB_X_RECEPCION.NroRecepcion = RECEPCION.NroRecepcion '
+            'WHERE FB_X_RECEPCION.NroFarmabox = ? ')
+    parte5 ='ORDER BY 2'
+
+    if fechaDesde == '' and fechaHasta =='':
+        argumentosLista.append(nroFarmabox) 
+    else:
+        parte2 = 'AND FechaModificacion BETWEEN ? AND ? '
+        parte4 = 'AND FechaRecepcion BETWEEN ? AND ? '
+        fechaDesdeFormateada = None
+        fechaHastaFormateada = None
+        if fechaDesde != '' and fechaHasta !='':
+            desde = fechaDesde + ' 00:00:00'
+            fechaDesdeFormateada = datetime.strptime(desde, "%d/%m/%y %H:%M:%S")
+            hasta = fechaHasta +' 23:59:59'
+            fechaHastaFormateada = datetime.strptime(hasta, "%d/%m/%y %H:%M:%S")
+        elif fechaDesde != '' and fechaHasta =='':
+            desde = fechaDesde + ' 00:00:00'
+            fechaDesdeFormateada = datetime.strptime(desde, "%d/%m/%y %H:%M:%S")
+            fechaHastaFormateada = datetime.now()
+
+        else:
+            hasta = fechaHasta +' 23:59:59'
+            fechaDesdeFormateada = datetime.strptime('2021/07/22 15:44:23', "%Y/%m/%d %H:%M:%S")
+            fechaHastaFormateada = datetime.strptime(hasta, "%d/%m/%y %H:%M:%S")
+
+        argumentosLista.append(fechaDesdeFormateada)
+        argumentosLista.append(fechaHastaFormateada)
+        argumentosLista.append(nroFarmabox) 
+        argumentosLista.append(fechaDesdeFormateada)
+        argumentosLista.append(fechaHastaFormateada)   
+
+    querySQL = parte1+parte2+parte3+parte4+parte5
+
+    argumentos = tuple(argumentosLista)
+    cursor.execute(querySQL,(argumentos))
+
+    kardex = list(cursor.fetchall())
+    tuplaBusqueda = (kardex,fechaDesde,fechaHasta)
+    cursor.close
+
+    return tuplaBusqueda
+
+#Registro Singular
+def encontrarFarmabox(NroFarmabox):
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+
+    querySQL = ('SELECT * FROM FARMABOX '
+        'WHERE NroFarmabox=?')
+
+    filaFB = cursor.execute(querySQL,(NroFarmabox,))
+    farmabox = filaFB.fetchone()
+
+    if farmabox is None:
+        cursor.close
+        return None
+
+    cursor.close
+    return farmabox
+
+def buscarRadio(corRadio):
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+
+    querySQL = ('SELECT CodRadio,DescripcionRadio '
+        'FROM RADIO '
+        'WHERE CodRadio=?')
+    
+    filaRadio = cursor.execute(querySQL,(corRadio,))
+    radio = filaRadio.fetchone()
+
+    cursor.close
+    return radio
+
+def buscarRecepcion(nroRecepcion):
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+
+    if nroRecepcion != '':
+        querySQL = ('SELECT '
+            'RECEPCION.NroRecepcion,FechaRecepcion,CodRadio,TRANSPORTISTA.NombreTransportista,EMPRESA.NombreEmpresa, FB_X_RECEPCION.NroFarmabox,Tapas,Procesado '
+            'FROM RECEPCION '
+            'JOIN TRANSPORTISTA ON TRANSPORTISTA.NroTransportista = RECEPCION.NroTransportista '
+            'JOIN EMPRESA ON EMPRESA.CodEmpresa = TRANSPORTISTA.CodEmpresa '
+            'JOIN FB_X_RECEPCION ON FB_X_RECEPCION.NroRecepcion = RECEPCION.NroRecepcion '
+            'WHERE FB_X_RECEPCION.NroRecepcion=?')
+
+        cursor.execute(querySQL,(nroRecepcion,))
+        recepcion = list(cursor.fetchall())
+        cursor.close
+        return recepcion
+    return None
+
+def buscarRecepcionParaArmadoDeClase(nroRecepcion):
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+
+    if nroRecepcion != '':
+        querySQL = ('SELECT '
+            'RECEPCION.NroRecepcion,FechaRecepcion,CodRadio,NroTransportista, FB_X_RECEPCION.NroFarmabox,Tapas '
+            'FROM RECEPCION '
+            'JOIN FB_X_RECEPCION ON FB_X_RECEPCION.NroRecepcion = RECEPCION.NroRecepcion '
+            'WHERE FB_X_RECEPCION.NroRecepcion=?')
+
+        cursor.execute(querySQL,(nroRecepcion,))
+        recepcion = list(cursor.fetchall())
+        cursor.close
+        return recepcion
+    return None
+
+def buscarModificacion(nroModificacion):
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+
+    if nroModificacion != '':
+        querySQL = ('SELECT MODIFICACION.NroModificacion, FechaModificacion,TipoModificacion,NroFarmabox '
+                    'FROM MODIFICACION '
+                    'JOIN TIPOS_MODIFICACION ON TIPOS_MODIFICACION.CodTipoModificacion = MODIFICACION.CodTipoModificacion '
+                    'JOIN FB_X_MODIFICACION ON FB_X_MODIFICACION.NroModificacion = MODIFICACION.NroModificacion '
+                    'WHERE MODIFICACION.NroModificacion=?')
+
+        cursor.execute(querySQL,(nroModificacion,))
+        modificacion = list(cursor.fetchall())
+        cursor.close
+        return modificacion
+    return None
+
+def encontrarTransportista(nroTransportista):
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+
+    querySQL = ('SELECT NroTransportista, NombreTransportista, CodRadioUsual, DescripcionRadio, NombreEmpresa, Estado '
+        'FROM TRANSPORTISTA '
+        'JOIN RADIO ON RADIO.CodRadio = TRANSPORTISTA.CodRadioUsual '
+        'JOIN EMPRESA ON EMPRESA.CodEmpresa = TRANSPORTISTA.CodEmpresa '
+        'WHERE TRANSPORTISTA.NroTransportista=?')
+    
+
+    filaTransportista = cursor.execute(querySQL,(nroTransportista,))
+    transportista = filaTransportista.fetchone()
+
+    if transportista is None:
+        cursor.close
+        return None
+
+    cursor.close
+    return transportista
+
+
+#Agregar Registros
+def agregarEmpresa(nombreEmpresa: str):
+    try:
+        conexion = conectarBase()
+        cursor = conexion.cursor()
+        querySQL = 'INSERT INTO EMPRESA (NombreEmpresa) VALUES (?)'
+        cursor.execute(querySQL,(nombreEmpresa,))
+        conexion.commit()
+
+        #Obtengo ID
+        idGenerado = cursor.lastrowid
+
+        return idGenerado
+
+    except sql.Error as error:
+        return None
+        
+    finally:
+        cursor.close()
 
 def agregarRadio(codigo,descipcion):
-    pass
+    try:
+        conexion = conectarBase()
+        cursor = conexion.cursor()
+        querySQL = 'INSERT INTO RADIO (CodRadio,DescripcionRadio) VALUES (?,?)'
+        cursor.execute(querySQL,(codigo,descipcion,))
+        conexion.commit()
+
+        return codigo
+
+    except sql.Error as error:
+        print(error)
+        return None
+        
+    finally:
+        cursor.close()
 
 def agregarTransportista(codigo,nombre,codRadio,nroEmpresa):
-    pass
+    try:
+        conexion = conectarBase()
+        cursor = conexion.cursor()
+        querySQL = 'INSERT INTO TRANSPORTISTA (NroTransportista,NombreTransportista,CodRadioUsual,CodEmpresa,Estado) VALUES (?,?,?,?,?)'
+        cursor.execute(querySQL,(codigo,nombre,codRadio,nroEmpresa,1,))
+        conexion.commit()
 
+        return codigo
+
+    except sql.Error as error:
+        return None
+        
+    finally:
+        cursor.close()
+
+#Modificar Registros
+def modificarTransportista(transportista):
+    conexion = conectarBase()
+    cursor = conexion.cursor()
+
+    querySQL = ('UPDATE TRANSPORTISTA '
+        'SET CodRadioUsual = ?, '
+        'Estado = ? '
+        'WHERE NroTransportista = ?')
+    
+    try:
+        cursor.execute(querySQL,(transportista.radio.codigo,transportista.estado,transportista.numero))
+
+        conexion.commit()
+        return True
+    except:
+        return False
+    finally:
+        cursor.close()
+
+
+#Especial
 def cargarFarmaboxDesdeCSV(archivo,tipo:int):
     
     #Conecto y armo cursor
