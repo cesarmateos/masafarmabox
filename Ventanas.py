@@ -550,7 +550,7 @@ class Ventana(Tk):
 
         #Tolerancia
         valoresTolerancia = []
-        for i in range (1,20):
+        for i in range (1,21):
             valoresTolerancia.append(str(round(i*0.05,2)))
 
         Label(seccionSincro.contenido, text="Tolerancia (segundos): ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),row=0,column=0,sticky=W)
@@ -568,7 +568,7 @@ class Ventana(Tk):
 
         #Backfeed
         valoresFeed = []
-        for i in range (1,50):
+        for i in range (1,81):
             valoresFeed.append(str(i*10))
 
         Label(seccionImpresora.contenido, text="Retroseso Etiqueta Previo: ",font="Verdana 10 bold",bg=Widgets.COLOR_FONDO,anchor=W).grid(padx=(5,0),row=0,column=0,sticky=W)
