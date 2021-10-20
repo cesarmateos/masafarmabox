@@ -1004,7 +1004,7 @@ class Ventana(Tk):
         VentanaAdvierteGuardado(self,800,250,"Guardando Nuevo Radio",texto,BaseDatos.agregarRadio(codigo,descipcion))
 
     def agregarTransportista(self,codigo,nombre,tuplaRadios,tuplaEmpresas):
-        radio = tuplaRadios[1][tuplaEmpresas[0]]
+        radio = tuplaRadios[1][tuplaRadios[0]]
         empresa = tuplaEmpresas[1][tuplaEmpresas[0]]
         texto = []
         texto.append("Número:"+ codigo)
@@ -1046,7 +1046,6 @@ class VentanaTapas(Widgets.VentanaHija):
         self.ventanaMadre.recepcion.agregarTapas(self.entradaTapas.get())
         self.ventanaMadre.marcadorTapas.set(self.ventanaMadre.recepcion.tapas)
         self.ventana.destroy()
-
 
 class VentanaPassword(Widgets.VentanaHija):
     def __init__(self,ventanaMadre,ancho,alto,titulo):
@@ -1196,21 +1195,22 @@ class VentanaFinalizarRecepcion(Widgets.VentanaHija):
         else:
             recepcionGenerada = Recepcion.Recepcion.desdeKey(idRecepcion)
             if not Recursos.imprimirTicket(recepcionGenerada):
-                ancho = 450
+                ancho = 600
                 alto = 230
                 VentanaErrorTicket(self.ventanaMadre,ancho,alto,"Error al imprimir el ticket",recepcionGenerada)
-            else:
-                self.ventanaMadre.pantallaInicial()
+            self.ventanaMadre.pantallaInicial()
 
         self.ventana.destroy()              
 
 class VentanaErrorTicket(Widgets.VentanaHija):
-    def __init__(self,ventanaMadre,ancho,alto,titulo,recepcion):
+    def __init__(self,ventanaMadre,ancho,alto,titulo,recepcion:Recepcion.Recepcion):
         Widgets.VentanaHija.__init__(self,ventanaMadre,ancho,alto,titulo)
 
         Widgets.igualarColumnas(self.contenedor,2)
 
-        Label(self.contenedor, text = "Ocurrió un error al imprimir el ticket.",font=(Widgets.FUENTE_PRINCIPAL, 12),bg='white').grid(row=1,column=0,columnspan=2,sticky=EW,pady=(30,20))
+        self.ventana.attributes("-topmost",True)
+
+        Label(self.contenedor, text = "Ocurrió un error al imprimir el ticket de la recepción "+str(recepcion.nroRecepcion),font=(Widgets.FUENTE_PRINCIPAL, 12),bg='white').grid(row=1,column=0,columnspan=2,sticky=EW,pady=(30,20))
         Label(self.contenedor, text = "¿Desea intentar imprimirlo nuevamente?",font=(Widgets.FUENTE_PRINCIPAL, 12),bg='white').grid(row=2,column=0,columnspan=2,sticky=EW,pady=(10,20))
 
         #Botones
@@ -1221,17 +1221,13 @@ class VentanaErrorTicket(Widgets.VentanaHija):
     
     def reimprimirTicket(self,recepcion):
         if not Recursos.imprimirTicket(recepcion):
-            ancho = 450
+            ancho = 600
             alto = 230
-            VentanaErrorTicket(self.ventanaMadre,ancho,alto,"Error al imprimir el ticket",recepcion)
-        else:
-            self.ventanaMadre.pantallaInicial()
-            
+            VentanaErrorTicket(self.ventanaMadre,ancho,alto,"Error al imprimir el ticket",recepcion)           
         self.ventana.destroy()  
 
     def sinTicket(self):
         self.ventana.destroy()
-        self.ventanaMadre.pantallaInicial()
 
 class VentanaRecepciones(Widgets.VentanaHija):
     def __init__(self,ventanaMadre,ancho,alto,titulo,fechaD,fechaH,radio,transp,empresa,estado):
@@ -1447,9 +1443,13 @@ class VentanaDetalleRecepcion(Widgets.VentanaHija):
             escritor = csv.writer(archivo,delimiter = ";")
             escritor.writerow(titulos)
             escritor.writerows(recepcion)
+
     def reimprimirTicket(self,recepcion):
         recepcionTicket = Recepcion.Recepcion.desdeKey(recepcion[0][0])
-        Recursos.imprimirTicket(recepcionTicket)
+        if not Recursos.imprimirTicket(recepcionTicket):
+            ancho = 600
+            alto = 230
+            VentanaErrorTicket(self.ventanaMadre,ancho,alto,"Error al imprimir el ticket",recepcionTicket)           
     
     def OnDoubleClick(self, event):
         item = self.tabla.selection()[0]

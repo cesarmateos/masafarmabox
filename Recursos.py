@@ -16,7 +16,7 @@ delayScanner = 0.15
 feed = 350
 backfeed = 200
 
-version = '1.12'
+version = '1.13'
 contrasena = 'boxfarma'
 
 #FUNCIONES
