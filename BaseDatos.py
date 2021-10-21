@@ -5,7 +5,7 @@ from datetime import datetime
 import Recursos
 
 def conectarBase():
-    rutaBase = Recursos.rutaArchivo(Recursos.nombreBase)
+    rutaBase = Recursos.rutaArchivo('Recursos/'+Recursos.nombreBase)
     try:
         return sql.connect(rutaBase)
     except sql.Error as error:

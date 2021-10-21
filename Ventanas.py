@@ -40,7 +40,7 @@ class Ventana(Tk):
          # Título e Ícono
         TITULO = 'MASAfarmabox ' + Recursos.version
         self.title(TITULO)
-        rutaIcono = Recursos.rutaArchivo('Imagenes/Pantuflas.ico')
+        rutaIcono = Recursos.rutaArchivo('Recursos/Imagenes/Pantuflas.ico')
         if os.path.exists(rutaIcono):
             self.iconbitmap(rutaIcono)
 
@@ -63,7 +63,7 @@ class Ventana(Tk):
         Label(self.frameSuperior, textvariable=self.subtitulo,font=(Widgets.FUENTE_PRINCIPAL, 9),background=Widgets.COLOR_FONDO).grid(row=1,column=0,sticky=W,padx=Widgets.MARGEN_X)
 
         #Logo
-        rutaLogo = Recursos.rutaArchivo('Imagenes/Logo.png')
+        rutaLogo = Recursos.rutaArchivo('Recursos/Imagenes/Logo.png')
         logo = Label(self.frameSuperior,bg=Widgets.COLOR_FONDO)
 
         if os.path.exists(rutaLogo):

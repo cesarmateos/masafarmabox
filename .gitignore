@@ -1,6 +1,5 @@
 #Carpetas
 Pruebas/
-Recursos/
 VersionesViejas/
 Imagenes/Originales/
 __pycache__/
@@ -12,5 +11,7 @@ dist
 *.pyo
 *.spec
 
-config.ini
-BaseFarmabox.db
+#Archivos Recursos
+Recursos/config.ini
+Recursos/BaseFarmabox.db
+Recursos/BaseFarmabox.sqbpro

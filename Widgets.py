@@ -54,8 +54,8 @@ class Btn(Button):
         super().__init__(root, fg='white',compound=CENTER,background=COLOR_FONDO,highlightbackground=COLOR_FONDO, font=fuente,highlightthickness=0,borderwidth=0, *args, **kwargs)
 
         
-        img1 = Recursos.rutaArchivo('Imagenes/'+imagenNormal)
-        img2 = Recursos.rutaArchivo('Imagenes/'+imagenHover)
+        img1 = Recursos.rutaArchivo('Recursos/Imagenes/'+imagenNormal)
+        img2 = Recursos.rutaArchivo('Recursos/Imagenes/'+imagenHover)
 
         if os.path.exists(img1):
             self.img = ImageTk.PhotoImage(Image.open(img1))
@@ -85,7 +85,7 @@ class VentanaHija():
         self.ventana.geometry(str(ancho)+"x"+str(alto))
         self.ventana.resizable(0, 0)
         self.ventana.configure(bg=COLOR_FONDO)
-        rutaIcono = Recursos.rutaArchivo('Imagenes/Pantuflas.ico')
+        rutaIcono = Recursos.rutaArchivo('Recursos/Imagenes/Pantuflas.ico')
         if os.path.exists(rutaIcono):
             self.ventana.iconbitmap(rutaIcono)
 

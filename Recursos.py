@@ -16,13 +16,13 @@ delayScanner = 0.15
 feed = 350
 backfeed = 200
 
-version = '1.13'
+version = '1.14'
 contrasena = 'boxfarma'
 
 #FUNCIONES
 def leerConfig():
     configParser = ConfigParser()   
-    rutaConfig = rutaArchivo('config.ini')
+    rutaConfig = rutaArchivo('Recursos/config.ini')
 
     global puertoScanner1
     global puertoScanner2
@@ -69,7 +69,7 @@ def leerConfig():
 
 def modificarConfig(grupo,item,dato):
     configParser = ConfigParser()  
-    rutaConfig = rutaArchivo('config.ini')
+    rutaConfig = rutaArchivo('Recursos/config.ini')
 
     configParser.read(rutaConfig)
     archivo = open(rutaConfig, 'w')
@@ -89,7 +89,7 @@ def esCubetaChica(cubeta):
 
 def imprimirTicketOLD(recepcion : Recepcion.Recepcion): 
 
-    rutaLibreria = rutaArchivo("Libs/TSCLIB.dll")
+    rutaLibreria = rutaArchivo("Recursos/Libs/TSCLIB.dll")
     if not os.path.exists(rutaLibreria):
         return False
 
@@ -156,7 +156,7 @@ def imprimirTicketOLD(recepcion : Recepcion.Recepcion):
     return True
 
 def imprimirTicket(recepcion : Recepcion.Recepcion):
-    rutaLibreria = rutaArchivo("Libs/TSCLIB.dll")
+    rutaLibreria = rutaArchivo("Recursos/Libs/TSCLIB.dll")
     if not os.path.exists(rutaLibreria):
         return False
 
