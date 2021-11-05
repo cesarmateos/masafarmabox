@@ -36,8 +36,11 @@ def botonSecundario(contenedor, texto,command):
     retorno = Btn(contenedor, text=texto,imagenNormal='BotonSecundario.png', wraplength=130, justify=CENTER, imagenHover='BotonSobre.png',command=command) 
     return retorno
 
-def botonMicro(contenedor, texto, command):
-    return Btn(contenedor, text=texto,imagenNormal='BotonMicro.png', wraplength=95, justify=CENTER, imagenHover='BotonMicroHover.png',command=command) 
+def botonMicroNaranja(contenedor, texto, command):
+    return Btn(contenedor, text=texto,imagenNormal='BotonMicroNaranja.png', wraplength=95, justify=CENTER, imagenHover='BotonMicroHover.png',command=command) 
+
+def botonMicroMorado(contenedor, texto, command):
+    return Btn(contenedor, text=texto,imagenNormal='BotonMicroMorado.png', wraplength=95, justify=CENTER, imagenHover='BotonMicroHover.png',command=command) 
 
 def igualarColumnas(contenedor, columnas):
     for columna in range(columnas):
@@ -52,8 +55,7 @@ class Btn(Button):
         fuente = tkFont.Font(family=FUENTE_PRINCIPAL, size=11, weight=tkFont.BOLD) 
         
         super().__init__(root, fg='white',compound=CENTER,background=COLOR_FONDO,highlightbackground=COLOR_FONDO, font=fuente,highlightthickness=0,borderwidth=0, *args, **kwargs)
-
-        
+  
         img1 = Recursos.rutaArchivo('Recursos/Imagenes/'+imagenNormal)
         img2 = Recursos.rutaArchivo('Recursos/Imagenes/'+imagenHover)
 
@@ -66,16 +68,55 @@ class Btn(Button):
                 self.img2 = ImageTk.PhotoImage(Image.open(img2))
                 self.bind('<Enter>', self.enter) 
         else:
-            self.configure(background=COLOR_MORADO_OSCURO, width=15, height=2,highlightthickness=1,borderwidth=1)
-
-        
-        
+            self.configure(background=COLOR_MORADO_OSCURO, width=15, height=2,highlightthickness=1,borderwidth=1)    
         
     def enter(self, event):
         self.config(image=self.img2)
 
     def leave(self, event):
         self.config(image=self.img)
+
+class Toggle(Button):
+    def __init__(self, root, variableToggle,  *args, **kwargs):
+
+        fuente = tkFont.Font(family=FUENTE_PRINCIPAL, size=11, weight=tkFont.BOLD)    
+        super().__init__(root, fg='white',compound=CENTER,background=COLOR_FONDO,highlightbackground=COLOR_FONDO, font=fuente,highlightthickness=0,borderwidth=0, *args, **kwargs)
+  
+        self.imgSiRaw = Recursos.rutaArchivo('Recursos/Imagenes/ToggleSi.png')
+        self.imgNoRaw = Recursos.rutaArchivo('Recursos/Imagenes/ToggleNo.png')
+        
+
+        if variableToggle == 0:
+            if os.path.exists(self.imgNoRaw):
+                self.imgNo = ImageTk.PhotoImage(Image.open(self.imgNoRaw))
+                self['image'] = self.imgNo
+            else:
+                self.configure(background=COLOR_MORADO_OSCURO, width=15, height=2,highlightthickness=1,borderwidth=1)   
+        else:
+            if os.path.exists(self.imgSiRaw):
+                self.imgSi = ImageTk.PhotoImage(Image.open(self.imgSiRaw))
+                self['image'] = self.imgSi
+            else:
+                self.configure(background=COLOR_NARANJA_SUAVE, width=15, height=2,highlightthickness=1,borderwidth=1)   
+            
+
+    def switch(self,variableToggle, identificadorConfig):
+
+        if variableToggle == 0:
+            if os.path.exists(self.imgSiRaw):
+                self.imgSi = ImageTk.PhotoImage(Image.open(self.imgSiRaw))
+                self['image'] = self.imgSi
+            else:
+                self.configure(background=COLOR_MORADO_OSCURO, width=15, height=2,highlightthickness=1,borderwidth=1)  
+            Recursos.modificarConfig('Ticket',identificadorConfig,'1')
+        else:
+            if os.path.exists(self.imgNoRaw):
+                self.imgNo = ImageTk.PhotoImage(Image.open(self.imgNoRaw))
+                self['image'] = self.imgNo
+            else:
+                self.configure(background=COLOR_NARANJA_SUAVE, width=15, height=2,highlightthickness=1,borderwidth=1)   
+            Recursos.modificarConfig('Ticket',identificadorConfig,'0')
+        Recursos.leerConfig()
 
 class VentanaHija():
     def __init__(self,ventanaMadre,ancho,alto,titulo):
