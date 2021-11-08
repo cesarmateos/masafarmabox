@@ -23,7 +23,7 @@ class ManagerScanner():
     
     def recibirDato(self,dato):
         sleep(Recursos.delayScanner)
-        self.ventana.recibirDatos(dato,self.dato)
+        self.ventana.pantallaActiva.recibirDatos(dato,self.dato)
         self.dato = 0
 
 class LectorPuerto():

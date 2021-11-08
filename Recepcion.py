@@ -112,37 +112,37 @@ class Recepcion:
 
         return recepcion
     
-    def agregarFarmabox(self, ventana, dato1,dato2):
+    def agregarFarmabox(self, pantallaRecepcion, dato1,dato2):
         
         fbox1 = int(dato1)
         fbox2 = int(dato2)
 
         if fbox1 == 0 or fbox2 == 0:
-            self.farmaboxRechazado(ventana,fbox1,fbox2,FB_DATO_NULO)
+            self.farmaboxRechazado(pantallaRecepcion,fbox1,fbox2,FB_DATO_NULO)
         elif fbox1 != fbox2:
-            self.farmaboxRechazado(ventana,fbox1,fbox2,FB_NO_COINCIDEN)
+            self.farmaboxRechazado(pantallaRecepcion,fbox1,fbox2,FB_NO_COINCIDEN)
         elif self.existeFB(fbox1):
             if Recursos.esCubetaChica(fbox1):
                 if fbox1 in self.listaFarmaboxChico:
-                    self.farmaboxRechazado(ventana,fbox1,fbox2,FB_REPETIDO)
+                    self.farmaboxRechazado(pantallaRecepcion,fbox1,fbox2,FB_REPETIDO)
                 else:
                     self.listaFarmaboxChico.append(fbox1)
-                    ventana.nuevoFarmaboxChico(dato1,self.cantidadChicos())
+                    pantallaRecepcion.nuevoFarmaboxChico(dato1,self.cantidadChicos())
             else:
                 if fbox1 in self.listaFarmaboxGrande:
-                    self.farmaboxRechazado(ventana,fbox1,fbox2,FB_REPETIDO)
+                    self.farmaboxRechazado(pantallaRecepcion,fbox1,fbox2,FB_REPETIDO)
                 else:
                     self.listaFarmaboxGrande.append(fbox1)
-                    ventana.nuevoFarmaboxGrande(dato1,self.cantidadGrandes())
+                    pantallaRecepcion.nuevoFarmaboxGrande(dato1,self.cantidadGrandes())
         else:
-            self.farmaboxRechazado(ventana,fbox1,fbox2,FB_NO_EXISTE)
+            self.farmaboxRechazado(pantallaRecepcion,fbox1,fbox2,FB_NO_EXISTE)
 
     def agregarTapas(self,tapas):
         self.tapas = tapas
 
-    def farmaboxRechazado(self,ventana,nroFBA, nroFBB, motivo: int):
+    def farmaboxRechazado(self,pantallaRecepcion,nroFBA, nroFBB, motivo: int):
         self.rechazados += 1
-        ventana.nuevoRechazado()
+        pantallaRecepcion.nuevoRechazado()
         nuevoRegistroRechazo = []
         nuevoRegistroRechazo.append(nroFBA)
         nuevoRegistroRechazo.append(nroFBB)
