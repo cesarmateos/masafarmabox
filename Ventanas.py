@@ -13,6 +13,7 @@ import os
 import sys
 import csv
 
+
 class Ventana(Tk):
 
     def __init__(self, *args, **kwargs):
@@ -107,6 +108,8 @@ class Ventana(Tk):
         estilo.map('TCombobox', selectbackground=[('readonly', 'white')])
         estilo.map('TCombobox', selectforeground=[('readonly', 'black')])  
 
+
+#Semi-Abstracta Pantalla
 class Pantalla():
 
     def __init__(self,ventanaMadre:Ventana):
@@ -123,6 +126,8 @@ class Pantalla():
     def recibirDatos(self,dato1,dato2):
         pass
 
+
+#Pantallas
 class PantallaInicial(Pantalla):
 
     def __init__(self,ventana:Ventana):
@@ -1217,7 +1222,7 @@ class VentanCargaRechazados(Widgets.VentanaHija):
             #Obtengo Indice de línea seleccionada
             index = self.tabla.index(lineaElegida)
             #Agrego el farmabox a la Recepción
-            self.pantallaRecepcion.agregarFarmabox(self.ventanaMadre,nroFB,nroFB)
+            self.pantallaRecepcion.recepcion.agregarFarmabox(self.pantallaRecepcion,nroFB,nroFB)
             #Cambio el estado en la lista de Rechazados a AGREGADO
             self.listaRechazados[index][3] = 1
             #Muestro en Pantalla que el farmabox fue agregado
@@ -1260,7 +1265,7 @@ class VentanaFinalizarRecepcion(Widgets.VentanaHija):
                 ancho = 600
                 alto = 230
                 VentanaErrorTicket(self.ventanaMadre,ancho,alto,"Error al imprimir el ticket",recepcionGenerada)
-            self.ventanaMadre.pantallaInicial()
+            PantallaInicial(self.ventanaMadre)
 
         self.ventana.destroy()              
 
@@ -1899,7 +1904,7 @@ class VentanaPassword(Widgets.VentanaHija):
         Label(self.contenedor, text = "Contraseña",font=(Widgets.FUENTE_PRINCIPAL, 15),bg='white').grid(row=1,column=0,pady=28,padx=15,sticky=E)
 
         #Entrada de Texto
-        self.entradaTapas = Entry(self.contenedor, font=(Widgets.FUENTE_PRINCIPAL,15), width=18,highlightthickness=2)
+        self.entradaTapas = Entry(self.contenedor, show="*",font=(Widgets.FUENTE_PRINCIPAL,15), width=18,highlightthickness=2)
         self.entradaTapas.focus_set()
         self.entradaTapas.grid(row=1,column=1,sticky=W)
         

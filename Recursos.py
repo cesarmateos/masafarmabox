@@ -105,74 +105,7 @@ def esCubetaChica(cubeta):
         return False
     return True
 
-def imprimirTicketOLD(recepcion : Recepcion.Recepcion): 
-
-    rutaLibreria = rutaArchivo("Recursos/Libs/TSCLIB.dll")
-    if not os.path.exists(rutaLibreria):
-        return False
-
-    tsclibrary = ctypes.WinDLL(rutaLibreria); 
-    if tsclibrary.usbportqueryprinter() < 0:
-        return False
-
-    tsclibrary.openportW("USB");
-
-    xChicos1 = 10
-    xChicos2 = 140
-    xChicos3 = 270
-    xGrandes1 = 420
-    xGrandes2 = 550
-    xGrandes3 = 680
-    yFarmabox = 180
-    interlineado = 30
-    sizeFuenteFB = 28
-
-    fechaImprimible = recepcion.fecha
-
-    #tsclibrary.setup("SIZE 100 mm, 63 mm")
-    tsclibrary.sendcommandW("DIRECTION 1")
-    tsclibrary.sendcommandW("GAP 0,0")
-    tsclibrary.sendcommandW("CLS")
-    tsclibrary.sendcommandW("BACKFEED "+backfeed)
-    tsclibrary.windowsfontW("10","10","34","0", "0", "0", "Arial",recepcion.transportista.nombre+ " - "+ recepcion.transportista.empresa)
-    tsclibrary.windowsfontW("590","10","34","0", "0", "0", "Arial","Recep: "+str(recepcion.nroRecepcion).zfill(8))
-    #tsclibrary.windowsfontW("10","50","34","0", "0", "0", "Arial",recepcion.transportista.radio)
-    #tsclibrary.windowsfontW("50","55","26","0", "0", "0", "Arial","("+ recepcion.transportista.radioDescripcion+")")
-    tsclibrary.windowsfontW("545","50","34","0", "0", "0", "Arial",fechaImprimible[0:19])
-    tsclibrary.windowsfontW("135","120","50","0", "0", "1", "Arial","Chicos")
-    tsclibrary.windowsfontW("540","120","50","0", "0", "1", "Arial","Grandes")
-
-    columnaMasLarga = math.ceil(max(recepcion.cantidadChicos(),recepcion.cantidadGrandes())/3)
-
-
-    for i, farmabox in enumerate(recepcion.chicosOrdenados()):
-        if i < columnaMasLarga:
-            tsclibrary.windowsfontW(str(xChicos1),str(yFarmabox + interlineado*i),str(sizeFuenteFB),"0", "0", "0", "Arial",str(farmabox)) 
-        elif i < columnaMasLarga *2:
-            tsclibrary.windowsfontW(str(xChicos2),str(yFarmabox + interlineado*(i-columnaMasLarga)),str(sizeFuenteFB),"0", "0", "0", "Arial",str(farmabox))
-        else :
-            tsclibrary.windowsfontW(str(xChicos3),str(yFarmabox + interlineado*(i-columnaMasLarga*2)),str(sizeFuenteFB),"0", "0", "0", "Arial",str(farmabox))
-   
-    for i, farmabox in enumerate(recepcion.grandesOrdenados()):
-        if i < columnaMasLarga:
-            tsclibrary.windowsfontW(str(xGrandes1-25),str(yFarmabox + interlineado*i),str(sizeFuenteFB),"0", "0", "0", "Arial","║")
-            tsclibrary.windowsfontW(str(xGrandes1),str(yFarmabox + interlineado*i),str(sizeFuenteFB),"0", "0", "0", "Arial",str(farmabox))
-        elif i < columnaMasLarga *2:
-            tsclibrary.windowsfontW(str(xGrandes2),str(yFarmabox + interlineado*(i-columnaMasLarga)),str(sizeFuenteFB),"0", "0", "0", "Arial",str(farmabox))
-        else :
-            tsclibrary.windowsfontW(str(xGrandes3),str(yFarmabox + interlineado*(i-columnaMasLarga*2)),str(sizeFuenteFB),"0", "0", "0", "Arial",str(farmabox))
-
-
-    tsclibrary.windowsfontW(str(xChicos1),str(yFarmabox + interlineado*(columnaMasLarga+1)),str(sizeFuenteFB),"0", "0", "0", "Arial","Total Chicos : "+str(recepcion.cantidadChicos()))
-    tsclibrary.windowsfontW(str(xChicos1),str(yFarmabox + interlineado*(columnaMasLarga+2)),str(sizeFuenteFB),"0", "0", "0", "Arial","Total Grandes : "+str(recepcion.cantidadGrandes()))
-    tsclibrary.windowsfontW(str(xChicos1),str(yFarmabox + interlineado*(columnaMasLarga+3)),str(sizeFuenteFB),"0", "0", "0", "Arial","Tapas : "+str(recepcion.tapas))
-
-    tsclibrary.printlabelW("1","1")
-    tsclibrary.sendcommandW("FEED "+feed)
-    tsclibrary.closeport()
-    return True
-
-def imprimirTicket(recepcion : Recepcion.Recepcion):
+def imprimirTicketSimple(recepcion : Recepcion.Recepcion):
     rutaLibreria = rutaArchivo("Recursos/Libs/TSCLIB.dll")
     if not os.path.exists(rutaLibreria):
         return False
@@ -202,7 +135,7 @@ def imprimirTicket(recepcion : Recepcion.Recepcion):
     tsclibrary.closeport()
     return True
 
-def imprimirTicketModular(recepcion : Recepcion.Recepcion):
+def imprimirTicket(recepcion : Recepcion.Recepcion):
     rutaLibreria = rutaArchivo("Recursos/Libs/TSCLIB.dll")
     if not os.path.exists(rutaLibreria):
         return False
@@ -224,8 +157,8 @@ def imprimirTicketModular(recepcion : Recepcion.Recepcion):
     tsclibrary.windowsfontW("545","50","34","0", "0", "0", "Arial",fechaImprimible[0:19])
 
     if(imprimirRadio == 1):
-        tsclibrary.windowsfontW("10","50","34","0", "0", "0", "Arial",recepcion.transportista.radio)
-        tsclibrary.windowsfontW("50","55","26","0", "0", "0", "Arial","("+ recepcion.transportista.radioDescripcion+")")
+        tsclibrary.windowsfontW("10","50","34","0", "0", "0", "Arial",recepcion.transportista.radio.codigo)
+        tsclibrary.windowsfontW("50","55","26","0", "0", "0", "Arial","("+ recepcion.transportista.radio.descripcion+")")
 
     if(imprimirDetalle == 1):
         xChicos1 = 10
