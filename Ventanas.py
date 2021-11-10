@@ -1904,9 +1904,9 @@ class VentanaPassword(Widgets.VentanaHija):
         Label(self.contenedor, text = "Contraseña",font=(Widgets.FUENTE_PRINCIPAL, 15),bg='white').grid(row=1,column=0,pady=28,padx=15,sticky=E)
 
         #Entrada de Texto
-        self.entradaTapas = Entry(self.contenedor, show="*",font=(Widgets.FUENTE_PRINCIPAL,15), width=18,highlightthickness=2)
-        self.entradaTapas.focus_set()
-        self.entradaTapas.grid(row=1,column=1,sticky=W)
+        self.entradaPassword = Entry(self.contenedor, show="*",font=(Widgets.FUENTE_PRINCIPAL,15), width=18,highlightthickness=2)
+        self.entradaPassword.focus_set()
+        self.entradaPassword.grid(row=1,column=1,sticky=W)
         
         #Botones
         botonCancelar = Widgets.botonSecundario(self.frameInferior,'Cancelar',self.ventana.destroy)
@@ -1914,11 +1914,14 @@ class VentanaPassword(Widgets.VentanaHija):
         botonFinalizar =  Widgets.botonPrincipal(self.frameInferior,'Ingresar',lambda: self.evaluarPass(self))
         botonFinalizar.pack(side=RIGHT, anchor=SE,pady=10,padx=(0,10))
         
+        self.ventana.attributes("-topmost",True)
         self.ventana.bind('<Return>', lambda event: self.evaluarPass(self))
 
     def evaluarPass(self,event):
-        print(self.entradaTapas.get())
-        print(Recursos.contrasena)
-        if(self.entradaTapas.get()==Recursos.contrasena):
+        if(self.entradaPassword.get()==Recursos.contrasena):
             PantallaAdministracion(self.ventanaMadre)
-        self.ventana.destroy()
+            self.ventana.destroy()
+        else:
+            messagebox.showinfo(message="Contraseña Incorrecta", title="Contraseña Incorrecta")
+            self.entradaPassword.delete(0, 'end')
+        

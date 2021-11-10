@@ -169,7 +169,7 @@ def imprimirTicket(recepcion : Recepcion.Recepcion):
         xGrandes3 = 680
         yFarmabox = 180
         interlineado = 30
-        sizeFuenteFB = 28
+        sizeFuenteFB = "28"
 
         tsclibrary.windowsfontW("135","120","50","0", "0", "1", "Arial","Chicos")
         tsclibrary.windowsfontW("540","120","50","0", "0", "1", "Arial","Grandes")
@@ -178,25 +178,25 @@ def imprimirTicket(recepcion : Recepcion.Recepcion):
 
         for i, farmabox in enumerate(recepcion.chicosOrdenados()):
             if i < columnaMasLarga:
-                tsclibrary.windowsfontW(str(xChicos1),str(yFarmabox + interlineado*i),str(sizeFuenteFB),"0", "0", "0", "Arial",str(farmabox)) 
+                tsclibrary.windowsfontW(str(xChicos1),str(yFarmabox + interlineado*i),sizeFuenteFB,"0", "0", "0", "Arial",str(farmabox)) 
             elif i < columnaMasLarga *2:
-                tsclibrary.windowsfontW(str(xChicos2),str(yFarmabox + interlineado*(i-columnaMasLarga)),str(sizeFuenteFB),"0", "0", "0", "Arial",str(farmabox))
+                tsclibrary.windowsfontW(str(xChicos2),str(yFarmabox + interlineado*(i-columnaMasLarga)),sizeFuenteFB,"0", "0", "0", "Arial",str(farmabox))
             else :
-                tsclibrary.windowsfontW(str(xChicos3),str(yFarmabox + interlineado*(i-columnaMasLarga*2)),str(sizeFuenteFB),"0", "0", "0", "Arial",str(farmabox))
+                tsclibrary.windowsfontW(str(xChicos3),str(yFarmabox + interlineado*(i-columnaMasLarga*2)),sizeFuenteFB,"0", "0", "0", "Arial",str(farmabox))
     
         for i, farmabox in enumerate(recepcion.grandesOrdenados()):
             if i < columnaMasLarga:
-                tsclibrary.windowsfontW(str(xGrandes1-25),str(yFarmabox + interlineado*i),str(sizeFuenteFB),"0", "0", "0", "Arial","║")
-                tsclibrary.windowsfontW(str(xGrandes1),str(yFarmabox + interlineado*i),str(sizeFuenteFB),"0", "0", "0", "Arial",str(farmabox))
+                tsclibrary.windowsfontW(str(xGrandes1-25),str(yFarmabox + interlineado*i),sizeFuenteFB,"0", "0", "0", "Arial","║")
+                tsclibrary.windowsfontW(str(xGrandes1),str(yFarmabox + interlineado*i),sizeFuenteFB,"0", "0", "0", "Arial",str(farmabox))
             elif i < columnaMasLarga *2:
-                tsclibrary.windowsfontW(str(xGrandes2),str(yFarmabox + interlineado*(i-columnaMasLarga)),str(sizeFuenteFB),"0", "0", "0", "Arial",str(farmabox))
+                tsclibrary.windowsfontW(str(xGrandes2),str(yFarmabox + interlineado*(i-columnaMasLarga)),sizeFuenteFB,"0", "0", "0", "Arial",str(farmabox))
             else :
-                tsclibrary.windowsfontW(str(xGrandes3),str(yFarmabox + interlineado*(i-columnaMasLarga*2)),str(sizeFuenteFB),"0", "0", "0", "Arial",str(farmabox))
+                tsclibrary.windowsfontW(str(xGrandes3),str(yFarmabox + interlineado*(i-columnaMasLarga*2)),sizeFuenteFB,"0", "0", "0", "Arial",str(farmabox))
 
 
-        tsclibrary.windowsfontW(str(xChicos1),str(yFarmabox + interlineado*(columnaMasLarga+1)),str(sizeFuenteFB),"0", "0", "0", "Arial","Total Chicos : "+str(recepcion.cantidadChicos()))
-        tsclibrary.windowsfontW(str(xChicos1),str(yFarmabox + interlineado*(columnaMasLarga+2)),str(sizeFuenteFB),"0", "0", "0", "Arial","Total Grandes : "+str(recepcion.cantidadGrandes()))
-        tsclibrary.windowsfontW(str(xChicos1),str(yFarmabox + interlineado*(columnaMasLarga+3)),str(sizeFuenteFB),"0", "0", "0", "Arial","Tapas : "+str(recepcion.tapas))
+        tsclibrary.windowsfontW(str(xChicos1),str(yFarmabox + interlineado*(columnaMasLarga+1)),"45","0", "0", "0", "Arial","Total Chicos : "+str(recepcion.cantidadChicos()))
+        tsclibrary.windowsfontW(str(xChicos1),str(yFarmabox + interlineado*(columnaMasLarga+2)),"45","0", "0", "0", "Arial","Total Grandes : "+str(recepcion.cantidadGrandes()))
+        tsclibrary.windowsfontW(str(xChicos1),str(yFarmabox + interlineado*(columnaMasLarga+3)),"45","0", "0", "0", "Arial","Tapas : "+str(recepcion.tapas))
 
     else:
         tsclibrary.windowsfontW("10","100","45","0", "0", "0", "Arial","Total Chicos : "+str(recepcion.cantidadChicos()))
